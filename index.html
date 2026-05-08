@@ -263,6 +263,33 @@ body{
 /* ============================================================
    ANNOUNCE PANEL
    ============================================================ */
+/* INSTALL BANNER */
+.install-banner{
+  background:linear-gradient(135deg,rgba(124,106,255,0.18),rgba(77,184,255,0.12));
+  border:2px solid rgba(124,106,255,0.35);
+  border-radius:var(--radius);padding:13px 15px;
+  margin-bottom:12px;display:flex;align-items:center;gap:10px;
+  animation:slideIn .4s ease;
+}
+.install-banner.hidden{display:none}
+.install-info{flex:1;font-size:0.82rem;font-weight:800;color:var(--text)}
+.install-info strong{color:var(--accent);display:block;margin-bottom:3px;font-family:var(--font-display);font-size:1rem}
+.btn-install{
+  padding:9px 16px;background:var(--btn-grad);
+  border:none;border-radius:13px;color:#fff;
+  font-family:var(--font-display);font-size:0.95rem;
+  cursor:pointer;white-space:nowrap;transition:all .2s;
+  box-shadow:0 4px 14px rgba(0,0,0,0.2);
+}
+.btn-install:hover{transform:scale(1.05)}
+.btn-install:active{transform:scale(.95)}
+.btn-close-banner{
+  background:none;border:none;color:var(--muted);
+  font-size:1.2rem;cursor:pointer;padding:4px 6px;
+  transition:color .2s;flex-shrink:0;
+}
+.btn-close-banner:hover{color:var(--red)}
+
 .ann-panel{
   background:var(--card);
   border:2px solid var(--ann-border);
@@ -599,6 +626,16 @@ input:checked+.tslider::before{transform:translateX(21px)}
 
 <!-- ===== PAGE ALARMES ===== -->
 <div class="page active" id="page-alarms">
+
+  <!-- Banner de instalação PWA -->
+  <div class="install-banner hidden" id="installBanner">
+    <div class="install-info">
+      <strong>📲 Instalar como App</strong>
+      Adicione à tela inicial e use como aplicativo!
+    </div>
+    <button class="btn-install" onclick="doInstall()">Instalar</button>
+    <button class="btn-close-banner" onclick="closeBanner()">✕</button>
+  </div>
 
   <div class="clock-hero">
     <div class="big-time" id="bigTime">00:00:00</div>
@@ -1239,6 +1276,38 @@ function showDay(d){
       </div>
     </div>`).join('');
   speak(`${as.length} alarme${as.length>1?'s':''} no dia ${d} de ${MONTHS[calMonth]}.`);
+}
+
+// ============================================================
+// PWA INSTALL
+// ============================================================
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if(!localStorage.getItem('installBannerClosed')){
+    document.getElementById('installBanner').classList.remove('hidden');
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').classList.add('hidden');
+  speak('Aplicativo instalado com sucesso!');
+});
+
+async function doInstall(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('installBanner').classList.add('hidden');
+  if(outcome === 'accepted') speak('Ótimo! Instalando o aplicativo!');
+}
+
+function closeBanner(){
+  document.getElementById('installBanner').classList.add('hidden');
+  localStorage.setItem('installBannerClosed','1');
 }
 
 // ============================================================
