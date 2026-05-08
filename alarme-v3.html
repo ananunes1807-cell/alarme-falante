@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#7c6aff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alarme Falante">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>⏰ Alarme Falante</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800;900&family=Bubblegum+Sans&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THEME SYSTEM — 10 temas
+   ============================================================ */
+:root {
+  --bg:#1a0933; --surface:#240d42; --card:#2d1155;
+  --border:rgba(255,255,255,0.12);
+  --accent:#c77dff; --accent2:#7b2fff;
+  --yellow:#ffd93d; --green:#52e07a; --red:#ff5e5e; --blue:#4db8ff;
+  --text:#f5eeff; --muted:#a890c8; --radius:24px;
+  --field-bg:rgba(255,255,255,0.08); --field-border:rgba(255,255,255,0.15);
+  --field-color:#f5eeff; --select-bg:#2d1155;
+  --btn-grad:linear-gradient(135deg,#c77dff,#7b2fff);
+  --clock-grad:linear-gradient(135deg,#f5eeff 10%,#c77dff);
+  --nav-active:#c77dff;
+  --overlay-bg:#0d0020;
+  --ann-border:rgba(82,224,122,0.25);
+  --particle:'✨';
+  --font-display:'Fredoka One',cursive;
+  --font-body:'Nunito',sans-serif;
+}
+
+/* === PRINCESA/ROSA === */
+body.theme-princesa {
+  --bg:#fff0f8; --surface:#ffe4f3; --card:#fff5fb;
+  --border:rgba(255,105,180,0.18);
+  --accent:#ff69b4; --accent2:#e91e8c;
+  --text:#5a1a3a; --muted:#b06080;
+  --field-bg:rgba(255,105,180,0.08); --field-border:rgba(255,105,180,0.22);
+  --field-color:#5a1a3a; --select-bg:#fff0f8;
+  --btn-grad:linear-gradient(135deg,#ff85c8,#e91e8c);
+  --clock-grad:linear-gradient(135deg,#5a1a3a,#e91e8c);
+  --nav-active:#e91e8c; --overlay-bg:#3d0020;
+  --ann-border:rgba(255,105,180,0.3);
+}
+/* === GALÁXIA === */
+body.theme-galaxia {
+  --bg:#03001c; --surface:#08002e; --card:#0d0040;
+  --border:rgba(120,80,255,0.2);
+  --accent:#a78bff; --accent2:#5533ff;
+  --text:#e8e0ff; --muted:#8877cc;
+  --field-bg:rgba(100,70,255,0.1); --field-border:rgba(120,80,255,0.22);
+  --field-color:#e8e0ff; --select-bg:#0d0040;
+  --btn-grad:linear-gradient(135deg,#a78bff,#5533ff);
+  --clock-grad:linear-gradient(135deg,#e8e0ff,#a78bff);
+  --nav-active:#a78bff; --overlay-bg:#00000f;
+  --ann-border:rgba(167,139,255,0.3);
+}
+/* === ARCO-ÍRIS === */
+body.theme-arcoiris {
+  --bg:#fff9f0; --surface:#ffffff; --card:#ffffff;
+  --border:rgba(0,0,0,0.08);
+  --accent:#ff6b35; --accent2:#9b59b6;
+  --text:#2d1b00; --muted:#887766;
+  --field-bg:rgba(0,0,0,0.04); --field-border:rgba(0,0,0,0.12);
+  --field-color:#2d1b00; --select-bg:#fff9f0;
+  --btn-grad:linear-gradient(135deg,#ff6b35,#ffd93d,#52e07a,#4db8ff,#9b59b6);
+  --clock-grad:linear-gradient(135deg,#ff6b35,#9b59b6);
+  --nav-active:#ff6b35; --overlay-bg:#1a0a00;
+  --ann-border:rgba(255,107,53,0.25);
+}
+/* === DINOSSAUROS === */
+body.theme-dino {
+  --bg:#0d1f0a; --surface:#142b10; --card:#1a3515;
+  --border:rgba(80,200,80,0.18);
+  --accent:#7ed957; --accent2:#3a8a20;
+  --text:#d8f5c8; --muted:#80aa70;
+  --field-bg:rgba(80,200,80,0.08); --field-border:rgba(80,200,80,0.2);
+  --field-color:#d8f5c8; --select-bg:#1a3515;
+  --btn-grad:linear-gradient(135deg,#7ed957,#3a8a20);
+  --clock-grad:linear-gradient(135deg,#d8f5c8,#7ed957);
+  --nav-active:#7ed957; --overlay-bg:#020a01;
+  --ann-border:rgba(126,217,87,0.3);
+}
+/* === GATINHOS === */
+body.theme-gatinho {
+  --bg:#fdf4e3; --surface:#fff8ed; --card:#ffffff;
+  --border:rgba(210,160,80,0.18);
+  --accent:#f0a500; --accent2:#c97b00;
+  --text:#3d2200; --muted:#a07840;
+  --field-bg:rgba(240,165,0,0.07); --field-border:rgba(240,165,0,0.2);
+  --field-color:#3d2200; --select-bg:#fdf4e3;
+  --btn-grad:linear-gradient(135deg,#f0a500,#c97b00);
+  --clock-grad:linear-gradient(135deg,#3d2200,#f0a500);
+  --nav-active:#c97b00; --overlay-bg:#1a0c00;
+  --ann-border:rgba(240,165,0,0.3);
+}
+/* === OCEANO/SEREIA === */
+body.theme-sereia {
+  --bg:#001428; --surface:#002040; --card:#002d58;
+  --border:rgba(0,200,220,0.18);
+  --accent:#00d4e8; --accent2:#0088bb;
+  --text:#d0f5ff; --muted:#60a8c0;
+  --field-bg:rgba(0,200,220,0.08); --field-border:rgba(0,200,220,0.2);
+  --field-color:#d0f5ff; --select-bg:#002d58;
+  --btn-grad:linear-gradient(135deg,#00d4e8,#0088bb);
+  --clock-grad:linear-gradient(135deg,#d0f5ff,#00d4e8);
+  --nav-active:#00d4e8; --overlay-bg:#000810;
+  --ann-border:rgba(0,212,232,0.3);
+}
+/* === VAMPIROS === */
+body.theme-vampiro {
+  --bg:#0a0005; --surface:#150008; --card:#1f000d;
+  --border:rgba(180,0,50,0.22);
+  --accent:#cc0033; --accent2:#880022;
+  --text:#f5d0d8; --muted:#a07080;
+  --field-bg:rgba(180,0,50,0.08); --field-border:rgba(180,0,50,0.22);
+  --field-color:#f5d0d8; --select-bg:#1f000d;
+  --btn-grad:linear-gradient(135deg,#cc0033,#880022);
+  --clock-grad:linear-gradient(135deg,#f5d0d8,#cc0033);
+  --nav-active:#cc0033; --overlay-bg:#050002;
+  --ann-border:rgba(200,0,50,0.3);
+}
+/* === AUTISMO (calmo/sensorial) === */
+body.theme-autismo {
+  --bg:#e8f4f8; --surface:#f0f8fc; --card:#ffffff;
+  --border:rgba(70,150,200,0.15);
+  --accent:#4a90b8; --accent2:#2a6a8a;
+  --text:#1a3a4a; --muted:#6090a8;
+  --field-bg:rgba(70,150,200,0.07); --field-border:rgba(70,150,200,0.18);
+  --field-color:#1a3a4a; --select-bg:#e8f4f8;
+  --btn-grad:linear-gradient(135deg,#4a90b8,#2a6a8a);
+  --clock-grad:linear-gradient(135deg,#1a3a4a,#4a90b8);
+  --nav-active:#4a90b8; --overlay-bg:#001018;
+  --ann-border:rgba(74,144,184,0.25);
+}
+/* === BRUXAS === */
+body.theme-bruxa {
+  --bg:#0d0318; --surface:#160525; --card:#1e0830;
+  --border:rgba(140,80,255,0.2);
+  --accent:#9d4edd; --accent2:#5a189a;
+  --text:#eedeff; --muted:#9070b8;
+  --field-bg:rgba(140,80,255,0.08); --field-border:rgba(140,80,255,0.2);
+  --field-color:#eedeff; --select-bg:#1e0830;
+  --btn-grad:linear-gradient(135deg,#9d4edd,#5a189a);
+  --clock-grad:linear-gradient(135deg,#eedeff,#9d4edd);
+  --nav-active:#9d4edd; --overlay-bg:#050010;
+  --ann-border:rgba(157,78,221,0.3);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding-bottom:50px;
+  transition:background .4s,color .4s;
+}
+
+/* animated background particles */
+.bg-anim{
+  position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+}
+.bg-anim span{
+  position:absolute;
+  font-size:1.4rem;
+  opacity:0;
+  animation:floatUp 8s ease-in infinite;
+}
+@keyframes floatUp{
+  0%{opacity:0;transform:translateY(0) rotate(0deg) scale(0.7)}
+  15%{opacity:.55}
+  85%{opacity:.3}
+  100%{opacity:0;transform:translateY(-100vh) rotate(360deg) scale(1.1)}
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav{
+  display:flex;
+  background:var(--surface);
+  border-bottom:2px solid var(--border);
+  position:sticky;top:0;z-index:200;
+  transition:background .4s;
+}
+.nav-tab{
+  flex:1;padding:11px 4px 9px;
+  background:none;border:none;
+  color:var(--muted);
+  font-family:var(--font-body);
+  font-size:0.72rem;font-weight:800;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:color .2s,transform .15s;
+  border-bottom:3px solid transparent;
+}
+.nav-tab .ti{font-size:1.4rem;transition:transform .2s}
+.nav-tab.active{color:var(--nav-active);border-bottom-color:var(--nav-active)}
+.nav-tab.active .ti{transform:scale(1.2)}
+.nav-tab:active{transform:scale(.93)}
+.theme-btn{
+  padding:11px 10px;background:none;border:none;
+  color:var(--muted);font-size:1.3rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .2s,color .2s;flex-shrink:0;
+}
+.theme-btn:hover{transform:rotate(20deg) scale(1.15)}
+
+/* ============================================================
+   PAGES
+   ============================================================ */
+.page{display:none;padding:14px;position:relative;z-index:1}
+.page.active{display:block}
+
+/* ============================================================
+   CLOCK HERO
+   ============================================================ */
+.clock-hero{
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px 16px 16px;
+  text-align:center;
+  margin-bottom:12px;
+  position:relative;overflow:hidden;
+  transition:background .4s;
+  box-shadow:0 8px 32px rgba(0,0,0,0.2);
+}
+.clock-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 70% 0%,rgba(255,255,255,0.06) 0%,transparent 60%);
+  pointer-events:none;
+}
+.big-time{
+  font-family:var(--font-display);
+  font-size:clamp(3rem,14vw,5rem);
+  line-height:1;
+  background:var(--clock-grad);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:2px;
+}
+.big-date{color:var(--muted);font-size:0.88rem;font-weight:800;margin-top:5px;text-transform:capitalize}
+.speak-time-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:10px;padding:7px 16px;
+  background:var(--field-bg);border:1.5px solid var(--field-border);
+  border-radius:20px;color:var(--text);
+  font-family:var(--font-body);font-size:0.82rem;font-weight:800;
+  cursor:pointer;transition:all .2s;
+}
+.speak-time-btn:hover{background:var(--btn-grad);border-color:transparent;color:#fff;transform:scale(1.04)}
+.speak-time-btn:active{transform:scale(.96)}
+
+/* ============================================================
+   ANNOUNCE PANEL
+   ============================================================ */
+.ann-panel{
+  background:var(--card);
+  border:2px solid var(--ann-border);
+  border-radius:var(--radius);
+  padding:13px 15px;
+  margin-bottom:12px;
+  transition:background .4s;
+}
+.ann-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ann-title{font-family:var(--font-display);font-size:1.1rem;color:var(--green);display:flex;align-items:center;gap:6px}
+.ann-sub{font-size:0.72rem;font-weight:800;color:var(--muted);margin-top:2px}
+.ann-intervals{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.ann-intervals.hidden{display:none}
+.int-btn{
+  padding:6px 14px;border-radius:18px;
+  background:var(--field-bg);border:1.5px solid var(--field-border);
+  color:var(--muted);font-family:var(--font-body);
+  font-size:0.82rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.int-btn.active{background:var(--btn-grad);border-color:transparent;color:#fff;transform:scale(1.05)}
+.int-btn:active{transform:scale(.95)}
+
+/* ============================================================
+   THEME PICKER
+   ============================================================ */
+.theme-picker-wrap{margin-bottom:12px}
+.theme-scroll{
+  display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;
+  scrollbar-width:none;
+}
+.theme-scroll::-webkit-scrollbar{display:none}
+.theme-pill{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  flex-shrink:0;cursor:pointer;
+  transition:transform .2s;
+}
+.theme-pill:hover{transform:translateY(-3px) scale(1.06)}
+.theme-pill:active{transform:scale(.93)}
+.theme-dot{
+  width:44px;height:44px;border-radius:50%;
+  border:3px solid transparent;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;
+  transition:all .25s;
+  box-shadow:0 3px 12px rgba(0,0,0,0.25);
+}
+.theme-pill.active .theme-dot{
+  border-color:#fff;
+  transform:scale(1.12);
+  box-shadow:0 4px 16px rgba(255,255,255,0.3);
+}
+.theme-pill span{font-size:0.62rem;font-weight:800;color:var(--muted);text-align:center;max-width:52px;line-height:1.2}
+
+/* ============================================================
+   SEC TITLE
+   ============================================================ */
+.sec-title{
+  font-family:var(--font-display);
+  font-size:1.15rem;color:var(--yellow);
+  margin-bottom:10px;display:flex;align-items:center;gap:7px;
+}
+
+/* ============================================================
+   CARD
+   ============================================================ */
+.card{
+  background:var(--card);border:2px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:12px;
+  transition:background .4s;
+  box-shadow:0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* ============================================================
+   TIME PICKER
+   ============================================================ */
+.time-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px}
+.tcol{display:flex;flex-direction:column;align-items:center;gap:6px}
+.tcol label{font-size:0.72rem;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+.t-input{
+  background:var(--field-bg);border:2px solid var(--field-border);
+  border-radius:16px;color:var(--field-color);
+  font-family:var(--font-display);font-size:2.2rem;
+  text-align:center;width:84px;padding:8px 4px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  -moz-appearance:textfield;
+}
+.t-input::-webkit-outer-spin-button,.t-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.t-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent),0.15)}
+.colon{
+  font-family:var(--font-display);font-size:2.4rem;
+  color:var(--accent);margin-top:18px;
+  animation:blink 1s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.arr{
+  background:var(--field-bg);border:2px solid var(--field-border);
+  border-radius:12px;color:var(--text);font-size:1rem;
+  width:40px;height:34px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;font-weight:900;
+}
+.arr:hover{background:var(--btn-grad);border-color:transparent;color:#fff;transform:scale(1.1)}
+.arr:active{transform:scale(.88)}
+
+/* FIELD */
+.field{
+  background:var(--field-bg);border:2px solid var(--field-border);
+  border-radius:16px;color:var(--field-color);
+  font-family:var(--font-body);font-size:1rem;font-weight:800;
+  padding:11px 14px;outline:none;width:100%;
+  transition:border-color .2s,background .4s;margin-bottom:12px;
+}
+.field::placeholder{color:var(--muted);opacity:.6}
+.field:focus{border-color:var(--accent)}
+
+/* REPEAT MODES */
+.rlabel{font-size:0.75rem;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.rmodes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.rmode{
+  padding:8px 14px;border-radius:20px;
+  background:var(--field-bg);border:2px solid var(--field-border);
+  color:var(--muted);font-family:var(--font-body);
+  font-size:0.83rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.rmode.active{background:var(--btn-grad);border-color:transparent;color:#fff;transform:scale(1.05)}
+.rmode:active{transform:scale(.95)}
+
+/* WEEKDAYS */
+.wdays{display:flex;gap:5px;justify-content:center;margin-bottom:13px;flex-wrap:wrap}
+.wd{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--field-bg);border:2px solid var(--field-border);
+  color:var(--muted);font-family:var(--font-body);
+  font-size:0.78rem;font-weight:900;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.wd.active{background:var(--btn-grad);border-color:transparent;color:#fff;transform:scale(1.1)}
+
+/* DATE ROW */
+.drow{display:flex;gap:7px;margin-bottom:11px}
+.drow select,.drow input[type=number]{
+  flex:1;background:var(--field-bg);border:2px solid var(--field-border);
+  border-radius:14px;color:var(--field-color);
+  font-family:var(--font-body);font-size:0.9rem;font-weight:800;
+  padding:10px 8px;outline:none;cursor:pointer;
+}
+.drow select option{background:var(--select-bg);color:var(--field-color)}
+
+/* ADD BTN */
+.btn-add{
+  width:100%;padding:15px;
+  background:var(--btn-grad);
+  border:none;border-radius:18px;color:#fff;
+  font-family:var(--font-display);font-size:1.3rem;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 6px 22px rgba(0,0,0,0.25);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-add:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+.btn-add:active{transform:scale(.96)}
+
+/* ============================================================
+   ALARM ITEMS
+   ============================================================ */
+.alarm-item{
+  background:var(--card);border:2px solid var(--border);
+  border-radius:20px;padding:14px 15px;
+  margin-bottom:10px;display:flex;align-items:center;
+  gap:10px;transition:all .25s;
+  box-shadow:0 4px 16px rgba(0,0,0,0.12);
+  animation:slideIn .35s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.alarm-item.off{opacity:.38}
+.a-left{flex:1;min-width:0}
+.a-time{font-family:var(--font-display);font-size:2rem;color:var(--green);line-height:1}
+.alarm-item.off .a-time{color:var(--muted)}
+.a-label{font-size:0.82rem;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-repeat{font-size:0.7rem;font-weight:800;color:var(--accent);margin-top:2px}
+.a-right{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.ico-btn{
+  background:var(--field-bg);border:2px solid var(--field-border);
+  border-radius:11px;color:var(--muted);font-size:1rem;
+  width:34px;height:34px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.ico-btn.del:hover{background:rgba(255,94,94,0.18);border-color:var(--red);color:var(--red)}
+.ico-btn.spk:hover{background:rgba(77,184,255,0.18);border-color:var(--blue);color:var(--blue)}
+.ico-btn:active{transform:scale(.88)}
+.toggle{position:relative;width:48px;height:27px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;cursor:pointer;inset:0;background:rgba(128,128,160,0.25);border-radius:27px;transition:.3s}
+.tslider::before{position:absolute;content:'';height:19px;width:19px;left:4px;bottom:4px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 5px rgba(0,0,0,0.3)}
+input:checked+.tslider{background:var(--green)}
+input:checked+.tslider::before{transform:translateX(21px)}
+
+.empty{text-align:center;color:var(--muted);font-size:.95rem;font-weight:800;padding:28px 0;line-height:1.8}
+
+/* ============================================================
+   CALENDAR
+   ============================================================ */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-month{font-family:var(--font-display);font-size:1.5rem;color:var(--text)}
+.cal-nav{
+  background:var(--field-bg);border:2px solid var(--field-border);
+  border-radius:12px;color:var(--text);font-size:1rem;
+  width:38px;height:38px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.cal-nav:hover{background:var(--btn-grad);border-color:transparent;color:#fff}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{text-align:center;font-size:0.62rem;font-weight:900;color:var(--muted);text-transform:uppercase;padding:5px 0}
+.cal-day{
+  aspect-ratio:1;border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:0.88rem;font-weight:800;cursor:pointer;
+  position:relative;transition:all .15s;gap:2px;color:var(--text);
+}
+.cal-day:hover{background:var(--field-bg);transform:scale(1.08)}
+.cal-day.today{background:var(--btn-grad);color:#fff;box-shadow:0 3px 12px rgba(0,0,0,0.2)}
+.cal-day.empty-day{opacity:0;pointer-events:none}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:var(--yellow)}
+.cal-day-alarms{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.day-detail{margin-top:12px;background:var(--card);border:2px solid var(--border);border-radius:20px;padding:15px}
+.day-detail-title{font-family:var(--font-display);font-size:1.1rem;color:var(--yellow);margin-bottom:10px}
+.day-alarm-item{display:flex;align-items:center;gap:9px;padding:10px 12px;background:var(--field-bg);border-radius:13px;margin-bottom:8px}
+.day-alarm-time{font-family:var(--font-display);font-size:1.4rem;color:var(--green)}
+.day-alarm-label{font-size:0.8rem;font-weight:800;color:var(--muted)}
+.day-alarm-repeat{font-size:0.68rem;color:var(--accent);font-weight:800}
+
+/* ============================================================
+   ALARM OVERLAY
+   ============================================================ */
+.overlay{
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:var(--overlay-bg);
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;overflow:hidden;
+}
+.overlay.on{display:flex}
+.rings{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.ring{position:absolute;border-radius:50%;border:3px solid;opacity:0;animation:ringOut 2.5s ease-out infinite}
+.ring:nth-child(1){width:140px;height:140px;border-color:var(--red);animation-delay:0s}
+.ring:nth-child(2){width:290px;height:290px;border-color:var(--yellow);animation-delay:.65s}
+.ring:nth-child(3){width:450px;height:450px;border-color:var(--green);animation-delay:1.3s}
+.ring:nth-child(4){width:620px;height:620px;border-color:var(--accent);animation-delay:1.95s}
+@keyframes ringOut{0%{transform:scale(.15);opacity:.95}100%{transform:scale(1);opacity:0}}
+
+.ov-emoji{font-size:clamp(3.5rem,15vw,6.5rem);animation:bellShake .32s ease-in-out infinite;z-index:2;margin-bottom:8px;filter:drop-shadow(0 0 20px rgba(255,200,0,0.5))}
+@keyframes bellShake{0%,100%{transform:rotate(-16deg) scale(1)}50%{transform:rotate(16deg) scale(1.05)}}
+.ov-time{
+  font-family:var(--font-display);
+  font-size:clamp(4rem,18vw,7.5rem);line-height:1;
+  background:linear-gradient(135deg,#fff 5%,var(--yellow) 50%,var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  z-index:2;text-align:center;
+  animation:timePulse 1.5s ease-in-out infinite;
+}
+@keyframes timePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.ov-label{
+  font-family:var(--font-display);
+  font-size:clamp(1.3rem,5.5vw,2.1rem);
+  color:var(--accent);z-index:2;text-align:center;
+  margin-bottom:36px;text-shadow:0 0 20px rgba(255,255,255,0.2);
+}
+/* BIG CHILD-FRIENDLY STOP BUTTON */
+.btn-stop{
+  width:min(310px,88vw);padding:30px 20px;
+  background:linear-gradient(135deg,#ff5e5e,#cc1111);
+  border:none;border-radius:30px;color:#fff;
+  font-family:var(--font-display);
+  font-size:clamp(1.8rem,7vw,2.8rem);
+  cursor:pointer;z-index:2;
+  box-shadow:0 0 0 7px rgba(255,94,94,.22),0 0 0 16px rgba(255,94,94,.1),0 10px 45px rgba(200,0,0,.55);
+  animation:stopPulse 1s ease-in-out infinite;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.stop-icon{font-size:clamp(2rem,9vw,3.5rem);animation:stopBounce .5s ease-in-out infinite alternate}
+@keyframes stopBounce{0%{transform:scale(1)}100%{transform:scale(1.15)}}
+@keyframes stopPulse{
+  0%,100%{box-shadow:0 0 0 7px rgba(255,94,94,.22),0 0 0 16px rgba(255,94,94,.1),0 10px 45px rgba(200,0,0,.55)}
+  50%{box-shadow:0 0 0 12px rgba(255,94,94,.28),0 0 0 26px rgba(255,94,94,.1),0 14px 55px rgba(200,0,0,.65)}
+}
+.btn-stop:active{transform:scale(.91)!important;animation:none}
+
+/* STARS REWARD */
+.stars-overlay{
+  display:none;position:fixed;inset:0;z-index:10001;
+  align-items:center;justify-content:center;flex-direction:column;
+  pointer-events:none;
+}
+.stars-overlay.on{display:flex}
+.stars-msg{
+  font-family:var(--font-display);
+  font-size:clamp(2rem,9vw,3.5rem);
+  color:#fff;text-shadow:0 0 30px var(--yellow);
+  animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+  text-align:center;padding:0 20px;
+}
+@keyframes popIn{0%{transform:scale(0) rotate(-10deg);opacity:0}100%{transform:scale(1) rotate(0deg);opacity:1}}
+
+/* CONFETTI */
+.conf{position:fixed;pointer-events:none;z-index:10000;animation:confFall 1.4s ease-in forwards}
+@keyframes confFall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(260px) rotate(420deg);opacity:0}}
+
+/* FLOAT EMOJI */
+.float-emoji{
+  position:fixed;pointer-events:none;z-index:10000;
+  font-size:clamp(2rem,8vw,3rem);
+  animation:floatEmoji 1.8s ease-out forwards;
+}
+@keyframes floatEmoji{
+  0%{transform:translateY(0) scale(0.5);opacity:1}
+  100%{transform:translateY(-200px) scale(1.3);opacity:0}
+}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND ANIMATED PARTICLES -->
+<div class="bg-anim" id="bgAnim"></div>
+
+<nav class="nav">
+  <button class="nav-tab active" onclick="showPage('alarms')" id="tab-alarms"><span class="ti">⏰</span>Alarmes</button>
+  <button class="nav-tab" onclick="showPage('add')" id="tab-add"><span class="ti">➕</span>Novo</button>
+  <button class="nav-tab" onclick="showPage('calendar')" id="tab-calendar"><span class="ti">📅</span>Calendário</button>
+  <button class="nav-tab" onclick="showPage('themes')" id="tab-themes"><span class="ti">🎨</span>Temas</button>
+</nav>
+
+<!-- ===== PAGE ALARMES ===== -->
+<div class="page active" id="page-alarms">
+
+  <div class="clock-hero">
+    <div class="big-time" id="bigTime">00:00:00</div>
+    <div class="big-date" id="bigDate"></div>
+    <button class="speak-time-btn" onclick="speakNow()">
+      🔊 Falar a hora agora
+    </button>
+  </div>
+
+  <div class="ann-panel">
+    <div class="ann-row">
+      <div>
+        <div class="ann-title">🗣️ Falar a hora sozinho</div>
+        <div class="ann-sub" id="annSub">Desativado</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="annToggle" onchange="toggleAnn(this.checked)">
+        <span class="tslider"></span>
+      </label>
+    </div>
+    <div class="ann-intervals hidden" id="annIntervalRow">
+      <button class="int-btn" data-min="15" onclick="setAnnInterval(15)">15 min</button>
+      <button class="int-btn" data-min="30" onclick="setAnnInterval(30)">30 min</button>
+      <button class="int-btn active" data-min="60" onclick="setAnnInterval(60)">1 hora</button>
+      <button class="int-btn" data-min="120" onclick="setAnnInterval(120)">2 horas</button>
+    </div>
+  </div>
+
+  <div class="sec-title">🔔 Meus Alarmes</div>
+  <div id="alarmList"><div class="empty">Nenhum alarme ainda! 😴<br>Toque em ➕ para adicionar!</div></div>
+</div>
+
+<!-- ===== PAGE NOVO ALARME ===== -->
+<div class="page" id="page-add">
+  <div class="sec-title">➕ Novo Alarme</div>
+  <div class="card">
+    <div class="time-row">
+      <div class="tcol">
+        <button class="arr" onclick="chH(1)">▲</button>
+        <label>Hora</label>
+        <input class="t-input" type="number" id="nHour" value="07" min="0" max="23">
+        <button class="arr" onclick="chH(-1)">▼</button>
+      </div>
+      <div class="colon">:</div>
+      <div class="tcol">
+        <button class="arr" onclick="chM(1)">▲</button>
+        <label>Min</label>
+        <input class="t-input" type="number" id="nMin" value="00" min="0" max="59">
+        <button class="arr" onclick="chM(-1)">▼</button>
+      </div>
+    </div>
+    <input class="field" type="text" id="nLabel" placeholder="Nome do alarme (ex: Escola 🎒)" maxlength="32">
+    <div class="rlabel">Repetir</div>
+    <div class="rmodes">
+      <button class="rmode active" data-mode="once"     onclick="setMode('once')">📅 Uma vez</button>
+      <button class="rmode"        data-mode="daily"    onclick="setMode('daily')">🔁 Todo dia</button>
+      <button class="rmode"        data-mode="weekdays" onclick="setMode('weekdays')">📆 Dias da semana</button>
+      <button class="rmode"        data-mode="weekly"   onclick="setMode('weekly')">🗓️ Semanal</button>
+      <button class="rmode"        data-mode="monthly"  onclick="setMode('monthly')">📅 Mensal</button>
+    </div>
+    <div id="wdPicker" class="hidden">
+      <div class="rlabel">Selecione os dias</div>
+      <div class="wdays">
+        <button class="wd" data-d="0">Dom</button><button class="wd" data-d="1">Seg</button>
+        <button class="wd" data-d="2">Ter</button><button class="wd" data-d="3">Qua</button>
+        <button class="wd" data-d="4">Qui</button><button class="wd" data-d="5">Sex</button>
+        <button class="wd" data-d="6">Sáb</button>
+      </div>
+    </div>
+    <div id="oncePicker">
+      <div class="rlabel">Data</div>
+      <div class="drow">
+        <input type="number" id="onceDay" class="field" style="margin:0" placeholder="Dia" min="1" max="31">
+        <select id="onceMonth" class="field" style="margin:0">
+          <option value="0">Janeiro</option><option value="1">Fevereiro</option>
+          <option value="2">Março</option><option value="3">Abril</option>
+          <option value="4">Maio</option><option value="5">Junho</option>
+          <option value="6">Julho</option><option value="7">Agosto</option>
+          <option value="8">Setembro</option><option value="9">Outubro</option>
+          <option value="10">Novembro</option><option value="11">Dezembro</option>
+        </select>
+        <input type="number" id="onceYear" class="field" style="margin:0" placeholder="Ano" min="2024" max="2099">
+      </div>
+    </div>
+    <div id="monthlyPicker" class="hidden">
+      <div class="rlabel">Dia do mês</div>
+      <input type="number" id="monthlyDay" class="field" placeholder="Dia (1-31)" min="1" max="31">
+    </div>
+    <div id="weeklyPicker" class="hidden">
+      <div class="rlabel">Dia da semana</div>
+      <div class="wdays" id="weeklyDays">
+        <button class="wd" data-d="0">Dom</button><button class="wd" data-d="1">Seg</button>
+        <button class="wd" data-d="2">Ter</button><button class="wd" data-d="3">Qua</button>
+        <button class="wd" data-d="4">Qui</button><button class="wd" data-d="5">Sex</button>
+        <button class="wd" data-d="6">Sáb</button>
+      </div>
+    </div>
+    <button class="btn-add" onclick="addAlarm()">🔔 Salvar Alarme!</button>
+  </div>
+</div>
+
+<!-- ===== PAGE CALENDÁRIO ===== -->
+<div class="page" id="page-calendar">
+  <div class="card">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="calMove(-1)">◀</button>
+      <div class="cal-month" id="calMonthLabel"></div>
+      <button class="cal-nav" onclick="calMove(1)">▶</button>
+    </div>
+    <div class="cal-grid" id="calDows"></div>
+    <div class="cal-grid" id="calDays"></div>
+  </div>
+  <div class="day-detail hidden" id="dayDetail">
+    <div class="day-detail-title" id="dayDetailTitle"></div>
+    <div id="dayDetailList"></div>
+  </div>
+</div>
+
+<!-- ===== PAGE TEMAS ===== -->
+<div class="page" id="page-themes">
+  <div class="sec-title">🎨 Escolha seu Tema</div>
+  <div id="themeGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px"></div>
+</div>
+
+<!-- ===== OVERLAY ALARME ===== -->
+<div class="overlay" id="overlay">
+  <div class="rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+  <div class="ov-emoji" id="ovEmoji">🔔</div>
+  <div class="ov-time" id="ovTime">07:00</div>
+  <div class="ov-label" id="ovLabel">Hora do alarme!</div>
+  <button class="btn-stop" id="btnStop" onclick="stopAlarm()">
+    <span class="stop-icon">🛑</span>PARAR ALARME
+  </button>
+</div>
+
+<!-- STARS REWARD -->
+<div class="stars-overlay" id="starsOverlay">
+  <div class="stars-msg" id="starsMsg">⭐⭐⭐<br>Muito bem!</div>
+</div>
+
+<script>
+// ============================================================
+// THEMES CONFIG
+// ============================================================
+const THEMES = [
+  { id:'default',  name:'Roxo Mágico',   emoji:'🔮', bg:'linear-gradient(135deg,#1a0933,#4a1a8a)', desc:'Escuro e misterioso' },
+  { id:'princesa', name:'Princesa',       emoji:'🌸', bg:'linear-gradient(135deg,#ff85c8,#ffcce8)', desc:'Rosa e encantado' },
+  { id:'galaxia',  name:'Galáxia',        emoji:'🚀', bg:'linear-gradient(135deg,#03001c,#5533ff)', desc:'Escuro estelar' },
+  { id:'arcoiris', name:'Arco-Íris',      emoji:'🌈', bg:'linear-gradient(135deg,#ff6b35,#9b59b6)', desc:'Colorido e alegre' },
+  { id:'dino',     name:'Dinossauros',    emoji:'🦕', bg:'linear-gradient(135deg,#0d1f0a,#3a8a20)', desc:'Verde selvagem' },
+  { id:'gatinho',  name:'Gatinhos',       emoji:'🐱', bg:'linear-gradient(135deg,#fdf4e3,#f0a500)', desc:'Fofo e quentinho' },
+  { id:'sereia',   name:'Sereia',         emoji:'🌊', bg:'linear-gradient(135deg,#001428,#00d4e8)', desc:'Oceano profundo' },
+  { id:'vampiro',  name:'Vampiro',        emoji:'🧛', bg:'linear-gradient(135deg,#0a0005,#cc0033)', desc:'Escuro e sombrio' },
+  { id:'autismo',  name:'Calmo & Suave',  emoji:'🌀', bg:'linear-gradient(135deg,#e8f4f8,#4a90b8)', desc:'Sereno e acolhedor' },
+  { id:'bruxa',    name:'Bruxas',         emoji:'🧙', bg:'linear-gradient(135deg,#0d0318,#9d4edd)', desc:'Mágico e encantado' },
+];
+
+// Emojis flutuantes por tema
+const THEME_PARTICLES = {
+  default:  ['✨','⭐','💫','🌟','🔮'],
+  princesa: ['🌸','💖','🦋','👑','🌺'],
+  galaxia:  ['🌟','🚀','⭐','🪐','💫'],
+  arcoiris: ['🌈','🦄','💖','⭐','🎀'],
+  dino:     ['🦕','🌿','🍃','🦖','🌱'],
+  gatinho:  ['🐱','🐾','🌸','🐟','❤️'],
+  sereia:   ['🌊','🐚','💙','🐠','⭐'],
+  vampiro:  ['🦇','🌙','🕸️','⚡','🌑'],
+  autismo:  ['🌀','💙','⭐','🌊','🎵'],
+  bruxa:    ['🧙','🌙','✨','🦇','🔮'],
+};
+
+// Mensagens de parabéns por tema
+const REWARD_MSGS = {
+  default:  ['⭐ Incrível!','✨ Muito bem!','🌟 Parabéns!'],
+  princesa: ['👑 Princesa!','🌸 Que linda!','💖 Arrasou!'],
+  galaxia:  ['🚀 Decolou!','🌟 Estelar!','🪐 Incrível!'],
+  arcoiris: ['🌈 Colorido!','🦄 Mágico!','🎉 Uhuuu!'],
+  dino:     ['🦕 Rawr!','🦖 Feroz!','🌿 Animal!'],
+  gatinho:  ['🐱 Miau!','🐾 Fofo!','❤️ Que gato!'],
+  sereia:   ['🌊 Profundo!','🐚 Mágico!','💙 Sereia!'],
+  vampiro:  ['🦇 Uuuuhh!','🌙 Das trevas!','⚡ Assustador!'],
+  autismo:  ['💙 Ótimo!','🌀 Conseguiu!','⭐ Parabéns!'],
+  bruxa:    ['🧙 Abracadabra!','✨ Encantado!','🔮 Mágico!'],
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let alarms       = JSON.parse(localStorage.getItem('alarms4') || '[]');
+let selectedMode = 'once';
+let selectedWDs  = new Set();
+let selWeekDay   = -1;
+let calYear, calMonth;
+let activeId     = null;
+let beepIval=null, speakIval=null, audioCtx=null;
+let annActive    = JSON.parse(localStorage.getItem('annActive')  || 'false');
+let annInterval  = parseInt(localStorage.getItem('annInterval')  || '60');
+let annTimer     = null;
+let currentTheme = localStorage.getItem('theme4') || 'default';
+let bgAnimTimer  = null;
+
+// ============================================================
+// VOICES
+// ============================================================
+let voices=[];
+function loadV(){ voices=speechSynthesis.getVoices(); }
+loadV();
+if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged=loadV;
+function getBrV(){ return voices.find(v=>v.lang==='pt-BR')||voices.find(v=>v.lang.startsWith('pt'))||null; }
+function speak(txt, rate=0.88){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(txt);
+  const v=getBrV(); if(v) u.voice=v;
+  u.lang='pt-BR'; u.rate=rate; u.pitch=1.1; u.volume=1;
+  speechSynthesis.speak(u);
+}
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const MONTHS=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const DAYS=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+const DAYS_S=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+function pad(n){return String(n).padStart(2,'0')}
+
+// ============================================================
+// CLOCK
+// ============================================================
+function tick(){
+  const n=new Date();
+  document.getElementById('bigTime').textContent=`${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+  document.getElementById('bigDate').textContent=`${DAYS[n.getDay()]}, ${n.getDate()} de ${MONTHS[n.getMonth()]} de ${n.getFullYear()}`;
+  if(n.getSeconds()===0 && activeId===null) checkAlarms(n);
+}
+setInterval(tick,500); tick();
+
+function speakNow(){
+  const n=new Date();
+  speak(makeTimeSpeech(n.getHours(), n.getMinutes()));
+  floatEmoji(document.querySelector('.speak-time-btn'), '🔊');
+}
+
+function makeTimeSpeech(H, M){
+  const period=H<12?'da manhã':H<18?'da tarde':'da noite';
+  const hTxt=H===0?'meia-noite':H===12?'meio-dia':(H>12?H-12:H)+' horas';
+  const mTxt=M===0?'':' e '+(M===1?'um minuto':M+' minutos');
+  return `São ${hTxt}${mTxt}${H===0||H===12?'':' '+period}.`;
+}
+
+// ============================================================
+// FLOAT EMOJI ANIMATION
+// ============================================================
+function floatEmoji(el, emoji){
+  const rect=el ? el.getBoundingClientRect() : {left:window.innerWidth/2, top:window.innerHeight/2, width:0, height:0};
+  const e=document.createElement('div');
+  e.className='float-emoji'; e.textContent=emoji;
+  e.style.cssText=`left:${rect.left+rect.width/2-20}px;top:${rect.top}px`;
+  document.body.appendChild(e);
+  e.addEventListener('animationend',()=>e.remove());
+}
+
+// ============================================================
+// CHECK ALARMS
+// ============================================================
+function checkAlarms(now){
+  const H=now.getHours(),M=now.getMinutes(),D=now.getDate(),Mo=now.getMonth(),Y=now.getFullYear(),WD=now.getDay();
+  for(const a of alarms){
+    if(!a.active||a.hour!==H||a.min!==M) continue;
+    let fire=false;
+    if(a.mode==='daily')             fire=true;
+    else if(a.mode==='weekdays')     fire=WD>=1&&WD<=5;
+    else if(a.mode==='weekdays_custom') fire=(a.days||[]).includes(WD);
+    else if(a.mode==='weekly')       fire=WD===a.weekDay;
+    else if(a.mode==='monthly')      fire=D===a.monthDay;
+    else if(a.mode==='once')         fire=D===a.date.d&&Mo===a.date.mo&&Y===a.date.y;
+    if(fire){ triggerAlarm(a); break; }
+  }
+}
+
+// ============================================================
+// TRIGGER ALARM
+// ============================================================
+function triggerAlarm(a){
+  activeId=a.id;
+  const t=`${pad(a.hour)}:${pad(a.min)}`;
+  const themeEmojis=THEME_PARTICLES[currentTheme]||THEME_PARTICLES.default;
+  document.getElementById('ovEmoji').textContent=themeEmojis[0];
+  document.getElementById('ovTime').textContent=t;
+  document.getElementById('ovLabel').textContent=a.label||'⏰ Hora do alarme!';
+  document.getElementById('overlay').classList.add('on');
+  document.body.style.overflow='hidden';
+  startBeeps();
+  const msg=`Atenção! ${makeTimeSpeech(a.hour,a.min)} ${a.label?a.label+'!':''}`;
+  setTimeout(()=>speak(msg),800);
+  speakIval=setInterval(()=>speak(msg),9000);
+  if(a.mode==='once'){ a.active=false; save(); }
+  // Notificação sistema
+  if('Notification' in window && Notification.permission==='granted'){
+    new Notification('⏰ '+(a.label||'Alarme!'),{body:'São '+t,icon:'./icon-192.png',requireInteraction:true});
+  }
+}
+
+// ============================================================
+// STOP ALARM
+// ============================================================
+function stopAlarm(){
+  stopBeeps(); speechSynthesis.cancel();
+  if(speakIval){clearInterval(speakIval);speakIval=null;}
+  document.getElementById('overlay').classList.remove('on');
+  document.body.style.overflow='';
+  burst();
+  showStars();
+  activeId=null;
+  const msgs=REWARD_MSGS[currentTheme]||REWARD_MSGS.default;
+  const msg=msgs[Math.floor(Math.random()*msgs.length)];
+  setTimeout(()=>speak('Alarme desativado! '+msg.replace(/[^\w\s!áéíóúàèìòùâêîôûãõç]/gi,''), 1.0), 300);
+}
+
+// ============================================================
+// STARS REWARD
+// ============================================================
+function showStars(){
+  const msgs=REWARD_MSGS[currentTheme]||REWARD_MSGS.default;
+  document.getElementById('starsMsg').innerHTML=msgs[Math.floor(Math.random()*msgs.length)].replace('!','!<br>');
+  const ov=document.getElementById('starsOverlay');
+  ov.classList.add('on');
+  setTimeout(()=>ov.classList.remove('on'),2500);
+}
+
+// ============================================================
+// BEEPS
+// ============================================================
+function startBeeps(){ stopBeeps(); beep(); beepIval=setInterval(beep,1500); }
+function stopBeeps(){
+  if(beepIval){clearInterval(beepIval);beepIval=null;}
+  if(audioCtx){try{audioCtx.close();}catch(e){} audioCtx=null;}
+}
+function beep(){
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const t=audioCtx.currentTime;
+  [880,1100,880,1320].forEach((f,i)=>{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);
+    o.type='sine';o.frequency.value=f;
+    g.gain.setValueAtTime(0,t+i*.12);
+    g.gain.linearRampToValueAtTime(.4,t+i*.12+.03);
+    g.gain.linearRampToValueAtTime(0,t+i*.12+.1);
+    o.start(t+i*.12);o.stop(t+i*.12+.15);
+  });
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function burst(){
+  const colors=['#ff5e5e','#ffd93d','#52e07a','#4db8ff','#ff6eb4','#ffa502','var(--accent)'];
+  const emojis=(THEME_PARTICLES[currentTheme]||['⭐','✨','🎉']);
+  for(let i=0;i<28;i++){
+    const d=document.createElement('div');
+    const isEmoji=Math.random()>.5;
+    if(isEmoji){
+      d.className='float-emoji conf';
+      d.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      d.style.cssText=`left:${Math.random()*100}vw;top:${10+Math.random()*70}vh;font-size:${1.2+Math.random()*1.5}rem;animation-delay:${Math.random()*.6}s;animation-duration:${1+Math.random()*.8}s`;
+    } else {
+      d.className='conf';
+      d.style.cssText=`left:${Math.random()*100}vw;top:${10+Math.random()*70}vh;background:${colors[Math.floor(Math.random()*colors.length)]};width:10px;height:10px;border-radius:50%;animation-delay:${Math.random()*.6}s;animation-duration:${1+Math.random()*.8}s`;
+    }
+    document.body.appendChild(d);
+    d.addEventListener('animationend',()=>d.remove());
+  }
+}
+
+// ============================================================
+// THEME
+// ============================================================
+function applyTheme(id){
+  currentTheme=id;
+  localStorage.setItem('theme4',id);
+  // Remove all theme classes
+  document.body.className='';
+  if(id!=='default') document.body.classList.add('theme-'+id);
+  renderBgAnim();
+  renderThemePage();
+}
+
+function renderBgAnim(){
+  const container=document.getElementById('bgAnim');
+  container.innerHTML='';
+  const particles=THEME_PARTICLES[currentTheme]||['✨'];
+  for(let i=0;i<18;i++){
+    const s=document.createElement('span');
+    s.textContent=particles[Math.floor(Math.random()*particles.length)];
+    s.style.cssText=`left:${Math.random()*100}%;top:${80+Math.random()*30}%;animation-delay:${Math.random()*8}s;animation-duration:${6+Math.random()*6}s`;
+    container.appendChild(s);
+  }
+}
+
+function renderThemePage(){
+  const grid=document.getElementById('themeGrid');
+  grid.innerHTML=THEMES.map(t=>`
+    <div onclick="applyTheme('${t.id}')" style="
+      background:${t.bg};
+      border:3px solid ${currentTheme===t.id?'#fff':'transparent'};
+      border-radius:20px;padding:18px 12px;text-align:center;
+      cursor:pointer;transition:all .25s;
+      box-shadow:${currentTheme===t.id?'0 0 0 4px rgba(255,255,255,0.3)':'0 4px 16px rgba(0,0,0,0.25)'};
+      transform:${currentTheme===t.id?'scale(1.04)':'scale(1)'};
+    ">
+      <div style="font-size:2.2rem;margin-bottom:6px">${t.emoji}</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.5)">${t.name}</div>
+      <div style="font-size:0.68rem;color:rgba(255,255,255,0.7);margin-top:3px;font-weight:700">${t.desc}</div>
+      ${currentTheme===t.id?'<div style="margin-top:8px;font-size:0.75rem;background:rgba(255,255,255,0.25);border-radius:10px;padding:3px 8px;color:#fff;font-weight:800;display:inline-block">✓ Ativo</div>':''}
+    </div>`).join('');
+}
+
+// ============================================================
+// ANNOUNCE HOUR
+// ============================================================
+function initAnn(){
+  document.getElementById('annToggle').checked=annActive;
+  document.getElementById('annIntervalRow').classList.toggle('hidden',!annActive);
+  updateAnnSub();
+  document.querySelectorAll('.int-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.min)===annInterval));
+  if(annActive) scheduleAnn();
+}
+function toggleAnn(on){
+  annActive=on; localStorage.setItem('annActive',JSON.stringify(on));
+  document.getElementById('annIntervalRow').classList.toggle('hidden',!on);
+  updateAnnSub();
+  if(on){ scheduleAnn(); speak(`Vou falar a hora a cada ${annInterval<60?annInterval+' minutos':(annInterval/60)+' hora'+(annInterval>60?'s':'')}.`); }
+  else{ clearTimeout(annTimer); annTimer=null; }
+}
+function setAnnInterval(min){
+  annInterval=min; localStorage.setItem('annInterval',min);
+  document.querySelectorAll('.int-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.min)===min));
+  updateAnnSub();
+  if(annActive){ clearTimeout(annTimer); scheduleAnn(); }
+}
+function updateAnnSub(){
+  const el=document.getElementById('annSub');
+  if(!annActive){el.textContent='Desativado';return;}
+  el.textContent='✅ A cada '+(annInterval<60?annInterval+' minutos':annInterval/60+' hora'+(annInterval>60?'s':''));
+}
+function scheduleAnn(){
+  clearTimeout(annTimer);
+  const ms=annInterval*60*1000;
+  const now=new Date();
+  const msSinceMidnight=(now.getHours()*60+now.getMinutes())*60000+now.getSeconds()*1000+now.getMilliseconds();
+  const next=ms-(msSinceMidnight%ms);
+  annTimer=setTimeout(()=>{ doAnnounce(); scheduleAnn(); }, next);
+}
+function doAnnounce(){
+  if(activeId!==null) return;
+  const n=new Date();
+  speak(makeTimeSpeech(n.getHours(),n.getMinutes()));
+}
+
+// ============================================================
+// PAGES
+// ============================================================
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='calendar') renderCalendar();
+  if(id==='themes') renderThemePage();
+  // Speak page name
+  const names={alarms:'Alarmes',add:'Novo alarme',calendar:'Calendário',themes:'Temas'};
+  // speak(names[id], 1.1); // optional
+}
+
+// ============================================================
+// REPEAT MODE
+// ============================================================
+function setMode(m){
+  selectedMode=m;
+  document.querySelectorAll('.rmode').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  document.getElementById('wdPicker').classList.toggle('hidden',m!=='weekdays');
+  document.getElementById('oncePicker').classList.toggle('hidden',m!=='once');
+  document.getElementById('monthlyPicker').classList.toggle('hidden',m!=='monthly');
+  document.getElementById('weeklyPicker').classList.toggle('hidden',m!=='weekly');
+}
+document.querySelectorAll('#wdPicker .wd').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const d=+b.dataset.d;
+    if(selectedWDs.has(d)) selectedWDs.delete(d); else selectedWDs.add(d);
+    b.classList.toggle('active',selectedWDs.has(d));
+    floatEmoji(b, b.classList.contains('active')?'✅':'❌');
+  });
+});
+document.querySelectorAll('#weeklyDays .wd').forEach(b=>{
+  b.addEventListener('click',()=>{
+    selWeekDay=+b.dataset.d;
+    document.querySelectorAll('#weeklyDays .wd').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+
+// ============================================================
+// TIME INPUTS
+// ============================================================
+function chH(d){ const el=document.getElementById('nHour'); el.value=pad((parseInt(el.value)+d+24)%24); }
+function chM(d){ const el=document.getElementById('nMin');  el.value=pad((parseInt(el.value)+d+60)%60); }
+['nHour','nMin'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',function(){
+    const mx=id==='nHour'?23:59; let v=parseInt(this.value)||0;
+    if(v>mx)v=mx; if(v<0)v=0; this.value=pad(v);
+  });
+});
+
+// ============================================================
+// ADD ALARM
+// ============================================================
+function addAlarm(){
+  if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
+  const H=parseInt(document.getElementById('nHour').value);
+  const M=parseInt(document.getElementById('nMin').value);
+  const label=document.getElementById('nLabel').value.trim();
+  let alarm={id:Date.now(),hour:H,min:M,label,active:true,mode:selectedMode};
+  if(selectedMode==='weekdays'){
+    if(selectedWDs.size===0){speak('Selecione pelo menos um dia!');alert('Selecione pelo menos um dia!');return;}
+    alarm.mode='weekdays_custom'; alarm.days=[...selectedWDs];
+  } else if(selectedMode==='weekly'){
+    if(selWeekDay<0){speak('Selecione o dia da semana!');alert('Selecione o dia!');return;}
+    alarm.weekDay=selWeekDay;
+  } else if(selectedMode==='monthly'){
+    alarm.monthDay=Math.min(Math.max(parseInt(document.getElementById('monthlyDay').value)||1,1),31);
+  } else if(selectedMode==='once'){
+    alarm.date={d:parseInt(document.getElementById('onceDay').value)||1,mo:parseInt(document.getElementById('onceMonth').value),y:parseInt(document.getElementById('onceYear').value)||new Date().getFullYear()};
+  }
+  alarms.push(alarm);
+  alarms.sort((a,b)=>a.hour*60+a.min-(b.hour*60+b.min));
+  save(); renderAlarms();
+  speak(`Alarme adicionado para as ${pad(H)} horas e ${pad(M)} minutos! ${label||''}`);
+  floatEmoji(document.querySelector('.btn-add'),'✅');
+  showPage('alarms');
+}
+
+// ============================================================
+// SAVE / RENDER
+// ============================================================
+function save(){ localStorage.setItem('alarms4',JSON.stringify(alarms)); }
+
+function repeatLabel(a){
+  if(a.mode==='daily') return '🔁 Todo dia';
+  if(a.mode==='weekdays') return '🔁 Seg a Sex';
+  if(a.mode==='weekdays_custom') return '🔁 '+a.days.map(d=>DAYS_S[d]).join(', ');
+  if(a.mode==='weekly') return '🔁 Toda '+DAYS_S[a.weekDay||0];
+  if(a.mode==='monthly') return `🔁 Todo dia ${a.monthDay}`;
+  if(a.mode==='once'&&a.date) return `📅 ${a.date.d}/${a.date.mo+1}/${a.date.y}`;
+  return '';
+}
+
+function renderAlarms(){
+  const el=document.getElementById('alarmList');
+  if(!alarms.length){el.innerHTML='<div class="empty">Nenhum alarme ainda! 😴<br>Toque em ➕ para adicionar!</div>';return;}
+  el.innerHTML=alarms.map(a=>`
+    <div class="alarm-item ${a.active?'':'off'}">
+      <div class="a-left">
+        <div class="a-time">${pad(a.hour)}:${pad(a.min)}</div>
+        <div class="a-label">${a.label||'⏰ Alarme'}</div>
+        <div class="a-repeat">${repeatLabel(a)}</div>
+      </div>
+      <div class="a-right">
+        <button class="ico-btn spk" onclick="speakAlarm(${a.id},this)">🔊</button>
+        <label class="toggle">
+          <input type="checkbox" ${a.active?'checked':''} onchange="toggleA(${a.id},this.checked)">
+          <span class="tslider"></span>
+        </label>
+        <button class="ico-btn del" onclick="delAlarm(${a.id},this)">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+function toggleA(id,v){ const a=alarms.find(x=>x.id===id); if(a){a.active=v;save();renderAlarms();} }
+function delAlarm(id,el){
+  floatEmoji(el,'🗑️');
+  alarms=alarms.filter(x=>x.id!==id); save(); renderAlarms(); renderCalendar();
+}
+function speakAlarm(id,el){
+  const a=alarms.find(x=>x.id===id); if(!a) return;
+  speak(`Alarme às ${pad(a.hour)} horas e ${pad(a.min)} minutos. ${a.label||''}`);
+  floatEmoji(el,'🔊');
+}
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function alarmOccursOn(a,Y,Mo,D){
+  const WD=new Date(Y,Mo,D).getDay();
+  if(!a.active) return false;
+  if(a.mode==='daily') return true;
+  if(a.mode==='weekdays') return WD>=1&&WD<=5;
+  if(a.mode==='weekdays_custom') return (a.days||[]).includes(WD);
+  if(a.mode==='weekly') return WD===a.weekDay;
+  if(a.mode==='monthly') return D===a.monthDay;
+  if(a.mode==='once'&&a.date) return D===a.date.d&&Mo===a.date.mo&&Y===a.date.y;
+  return false;
+}
+function alarmsForDay(Y,Mo,D){ return alarms.filter(a=>alarmOccursOn(a,Y,Mo,D)); }
+function calMove(d){
+  calMonth+=d;
+  if(calMonth>11){calMonth=0;calYear++;} if(calMonth<0){calMonth=11;calYear--;}
+  renderCalendar();
+}
+function renderCalendar(){
+  const lbl=MONTHS[calMonth].charAt(0).toUpperCase()+MONTHS[calMonth].slice(1)+' '+calYear;
+  document.getElementById('calMonthLabel').textContent=lbl;
+  document.getElementById('calDows').innerHTML=DAYS_S.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const first=new Date(calYear,calMonth,1).getDay();
+  const total=new Date(calYear,calMonth+1,0).getDate();
+  const today=new Date();
+  let html='';
+  for(let i=0;i<first;i++) html+=`<div class="cal-day empty-day"></div>`;
+  for(let d=1;d<=total;d++){
+    const as=alarmsForDay(calYear,calMonth,d);
+    const isToday=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear();
+    const dots=as.slice(0,4).map(()=>`<div class="cal-dot"></div>`).join('');
+    html+=`<div class="cal-day ${isToday?'today':''}" onclick="showDay(${d})"><span>${d}</span><div class="cal-day-alarms">${dots}</div></div>`;
+  }
+  document.getElementById('calDays').innerHTML=html;
+  document.getElementById('dayDetail').classList.add('hidden');
+}
+function showDay(d){
+  const as=alarmsForDay(calYear,calMonth,d);
+  const det=document.getElementById('dayDetail');
+  det.classList.remove('hidden');
+  document.getElementById('dayDetailTitle').textContent=`${d} de ${MONTHS[calMonth]} de ${calYear}`;
+  const list=document.getElementById('dayDetailList');
+  if(!as.length){list.innerHTML='<div class="empty" style="padding:8px">Nenhum alarme neste dia.</div>';return;}
+  list.innerHTML=as.map(a=>`
+    <div class="day-alarm-item">
+      <div>
+        <div class="day-alarm-time">${pad(a.hour)}:${pad(a.min)}</div>
+        <div class="day-alarm-label">${a.label||'Alarme'}</div>
+        <div class="day-alarm-repeat">${repeatLabel(a)}</div>
+      </div>
+    </div>`).join('');
+  speak(`${as.length} alarme${as.length>1?'s':''} no dia ${d} de ${MONTHS[calMonth]}.`);
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+const now0=new Date();
+calYear=now0.getFullYear(); calMonth=now0.getMonth();
+document.getElementById('onceDay').value=now0.getDate();
+document.getElementById('onceMonth').value=now0.getMonth();
+document.getElementById('onceYear').value=now0.getFullYear();
+document.getElementById('monthlyDay').value=now0.getDate();
+renderAlarms();
+renderCalendar();
+applyTheme(currentTheme);
+initAnn();
+
+// Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
