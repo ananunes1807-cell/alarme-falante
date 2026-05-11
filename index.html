@@ -878,6 +878,13 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
       <input type="hidden" id="newStepEmoji" value="⭐">
       <input class="field" type="text" id="newStepName" placeholder="Nome da tarefa (ex: Escovar os dentes)" maxlength="30">
       <input class="field" type="text" id="newStepTip"  placeholder="Dica (ex: Escova em círculos!)" maxlength="40">
+      <div class="field-label">⏰ Horário do alarme (opcional)</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+        <input type="number" id="newStepHour" class="field" style="margin:0;width:80px;text-align:center;font-family:var(--ff);font-size:1.3rem" placeholder="HH" min="0" max="23">
+        <span style="font-family:var(--ff);font-size:1.5rem;color:var(--accent)">:</span>
+        <input type="number" id="newStepMin"  class="field" style="margin:0;width:80px;text-align:center;font-family:var(--ff);font-size:1.3rem" placeholder="MM" min="0" max="59">
+        <span style="font-size:0.72rem;font-weight:800;color:var(--muted);flex:1">Deixe em branco se não quiser alarme</span>
+      </div>
       <button class="btn-big" onclick="addRoutineStep()" style="font-size:1rem;padding:12px">➕ Adicionar tarefa</button>
     </div>
     <div class="modal-actions" style="margin-top:12px">
@@ -1253,7 +1260,10 @@ function renderRoutine(){
             <div class="step-emoji">${s.emoji}</div>
             <div class="step-text">
               <div class="step-name">${s.name}</div>
-              <div class="step-tip">${s.tip||''}</div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <div class="step-tip">${s.tip||''}</div>
+                ${s.hour!=null?`<span style="font-family:var(--ff);font-size:0.78rem;color:var(--accent);background:rgba(74,144,184,0.12);border-radius:7px;padding:1px 6px">⏰ ${pad(s.hour)}:${pad(s.min||0)}</span>`:''}
+              </div>
             </div>
             <div class="step-check">${progress[s.id]?'✓':''}</div>
           </div>`).join('')}
@@ -1349,9 +1359,14 @@ function renderRoutineEditorSteps(){
         <span style="font-size:1.4rem">${s.emoji}</span>
         <div style="flex:1">
           <div style="font-family:var(--ff);font-size:0.95rem;color:var(--text)">${s.name}</div>
-          <div style="font-size:0.7rem;color:var(--muted);font-weight:800">${s.tip||''}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+            <span style="font-size:0.7rem;font-weight:800;color:var(--muted)">${s.tip||''}</span>
+            ${s.hour!=null
+              ? `<span style="font-family:var(--ff);font-size:0.85rem;color:var(--accent);background:rgba(74,144,184,0.12);border-radius:8px;padding:1px 7px">⏰ ${pad(s.hour)}:${pad(s.min||0)}</span>`
+              : `<span style="font-size:0.7rem;color:var(--muted);opacity:.6">sem horário</span>`}
+          </div>
         </div>
-        <div style="display:flex;gap:4px">
+        <div style="display:flex;gap:4px;align-items:center">
           ${i>0?`<button onclick="moveStep('${editingRoutineId}',${i},-1)" style="background:none;border:none;font-size:1rem;cursor:pointer;color:var(--muted)">⬆️</button>`:''}
           ${i<steps.length-1?`<button onclick="moveStep('${editingRoutineId}',${i},1)" style="background:none;border:none;font-size:1rem;cursor:pointer;color:var(--muted)">⬇️</button>`:''}
           <button onclick="removeStep('${editingRoutineId}',${i})" style="background:none;border:none;font-size:1rem;cursor:pointer;color:var(--red)">🗑️</button>
@@ -1377,15 +1392,25 @@ function addRoutineStep(){
   const name  = document.getElementById('newStepName').value.trim();
   const tip   = document.getElementById('newStepTip').value.trim();
   const emoji = document.getElementById('newStepEmoji').value || '⭐';
+  const hourVal = document.getElementById('newStepHour').value;
+  const minVal  = document.getElementById('newStepMin').value;
   if(!name){ speak('Digite o nome da tarefa!'); return; }
+  const step = { id: 'step_'+Date.now(), emoji, name, tip };
+  if(hourVal !== ''){
+    step.hour = Math.min(23, Math.max(0, parseInt(hourVal)||0));
+    step.min  = Math.min(59, Math.max(0, parseInt(minVal)||0));
+  }
   const steps = getProfileRoutine(activeProfile, editingRoutineId);
-  steps.push({ id: 'step_'+Date.now(), emoji, name, tip });
+  steps.push(step);
   saveProfiles();
   document.getElementById('newStepName').value  = '';
   document.getElementById('newStepTip').value   = '';
-  document.getElementById('newStepEmoji').value = '';
+  document.getElementById('newStepHour').value  = '';
+  document.getElementById('newStepMin').value   = '';
+  document.getElementById('newStepEmoji').value = '⭐';
   renderRoutineEditorSteps();
-  speak(`Tarefa ${name} adicionada!`);
+  const timeStr = step.hour != null ? ` às ${pad(step.hour)}:${pad(step.min)}` : '';
+  speak(`Tarefa ${name}${timeStr} adicionada!`);
   floatE(null,'✅');
 }
 
@@ -1522,6 +1547,8 @@ function selAlarmProfile(i){
 // ================================================================
 function checkAlarms(now){
   const H=now.getHours(),M=now.getMinutes(),D=now.getDate(),Mo=now.getMonth(),Y=now.getFullYear(),WD=now.getDay();
+
+  // Check regular alarms
   for(const a of alarms){
     if(!a.active||a.hour!==H||a.min!==M) continue;
     let fire=false;
@@ -1531,7 +1558,48 @@ function checkAlarms(now){
     else if(a.mode==='weekly')        fire=WD===a.weekDay;
     else if(a.mode==='monthly')       fire=D===a.monthDay;
     else if(a.mode==='once')          fire=D===a.date.d&&Mo===a.date.mo&&Y===a.date.y;
-    if(fire){ triggerAlarm(a); break; }
+    if(fire){ triggerAlarm(a); return; }
+  }
+
+  // Check routine step alarms (all profiles, all routines)
+  if(activeAlarmId !== null) return;
+  profiles.forEach((prof, profIdx) => {
+    Object.keys(ROUTINE_META).forEach(rId => {
+      const steps = getProfileRoutineByIdx(profIdx, rId);
+      steps.forEach(step => {
+        if(step.hour == null) return;
+        if(step.hour === H && step.min === M){
+          triggerRoutineStep(prof, step);
+        }
+      });
+    });
+  });
+}
+
+function getProfileRoutineByIdx(profIdx, rId){
+  const p = profiles[profIdx];
+  if(!p||!p.routine||!p.routine[rId]) return [];
+  return p.routine[rId];
+}
+
+function triggerRoutineStep(prof, step){
+  if(activeAlarmId !== null) return;
+  activeAlarmId = 'routine_'+step.id;
+  const t = `${pad(step.hour)}:${pad(step.min)}`;
+  document.getElementById('ovProfile').textContent = prof.avatar;
+  document.getElementById('ovBell').textContent    = step.emoji;
+  document.getElementById('ovTime').textContent    = t;
+  document.getElementById('ovLabel').textContent   = `${prof.name} — ${step.name}`;
+  document.getElementById('overlay').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  playAlarmSound('gentle');
+  startBalloonGame();
+  document.getElementById('btnStop').style.display = 'none';
+  const msg = `Alarme! ${prof.name}! ${step.name}! ${step.tip || ''}`;
+  speak(msg, 0.85, 800);
+  speakIval = setInterval(()=>speak(msg, 0.85), 10000);
+  if('Notification' in window && Notification.permission==='granted'){
+    new Notification(`${step.emoji} ${prof.name} — ${step.name}`, { body: `São ${t}`, icon:'./icon-192.png', requireInteraction:true });
   }
 }
 
