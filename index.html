@@ -1229,6 +1229,7 @@ let annInterval   = parseInt(localStorage.getItem('annInterval')   || '60');
 let annTimer      = null;
 let selectedAlarmProfile = 0;
 let activeRoutineAlarm = null;
+const ALARM_GRACE_MINUTES = 5;
 
 // ================================================================
 // VOICES
@@ -1255,6 +1256,16 @@ const MONTHS=['janeiro','fevereiro','março','abril','maio','junho','julho','ago
 const DAYS=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
 const DAYS_S=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 function pad(n){ return String(n).padStart(2,'0'); }
+function dateStamp(d=new Date()){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function alarmFireKey(kind, id, d=new Date()){ return `alarm_fired_${kind}_${id}_${dateStamp(d)}`; }
+function wasAlarmFired(kind, id, d=new Date()){ return localStorage.getItem(alarmFireKey(kind, id, d)) === '1'; }
+function markAlarmFired(kind, id, d=new Date()){ localStorage.setItem(alarmFireKey(kind, id, d), '1'); }
+function isDueNow(hour, min, now, grace=ALARM_GRACE_MINUTES){
+  const scheduled = hour * 60 + (min || 0);
+  const current = now.getHours() * 60 + now.getMinutes();
+  const lateBy = current - scheduled;
+  return lateBy >= 0 && lateBy <= grace;
+}
 
 // ================================================================
 // CLOCK
@@ -1268,9 +1279,15 @@ function tick(){
   let gr = H<12?'Bom dia! 🌞': H<18?'Boa tarde! 🌤️':'Boa noite! 🌙';
   const p=profiles[activeProfile];
   document.getElementById('greeting').textContent=`${gr} ${p?p.name:''}`;
-  if(S===0 && activeAlarmId===null) checkAlarms(n);
+  if(activeAlarmId===null) checkAlarms(n);
 }
 setInterval(tick,500); tick();
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && activeAlarmId === null) checkAlarms(new Date());
+});
+window.addEventListener('focus', () => {
+  if(activeAlarmId === null) checkAlarms(new Date());
+});
 
 function makeTimeSpeech(H,M){
   const period=H<12?'da manhã':H<18?'da tarde':'da noite';
@@ -1867,7 +1884,7 @@ function checkAlarms(now){
 
   // Check regular alarms
   for(const a of alarms){
-    if(!a.active||a.hour!==H||a.min!==M) continue;
+    if(!a.active || !isDueNow(a.hour, a.min, now) || wasAlarmFired('alarm', a.id, now)) continue;
     let fire=false;
     if(a.mode==='daily')              fire=true;
     else if(a.mode==='weekdays')      fire=WD>=1&&WD<=5;
@@ -1875,7 +1892,7 @@ function checkAlarms(now){
     else if(a.mode==='weekly')        fire=WD===a.weekDay;
     else if(a.mode==='monthly')       fire=D===a.monthDay;
     else if(a.mode==='once')          fire=D===a.date.d&&Mo===a.date.mo&&Y===a.date.y;
-    if(fire){ triggerAlarm(a); return; }
+    if(fire){ markAlarmFired('alarm', a.id, now); triggerAlarm(a); return; }
   }
 
   // Check routine step alarms (all profiles, all routines)
@@ -1885,7 +1902,10 @@ function checkAlarms(now){
       const steps = getProfileRoutineByIdx(profIdx, rId);
       steps.forEach(step => {
         if(step.hour == null) return;
-        if(step.hour === H && step.min === M){
+        const stepKey = `${profIdx}_${rId}_${step.id}`;
+        if(isDueNow(step.hour, step.min, now) && !wasAlarmFired('routine', stepKey, now)){
+          if(activeAlarmId !== null) return;
+          markAlarmFired('routine', stepKey, now);
           triggerRoutineStep(prof, step, profIdx, rId);
         }
       });
