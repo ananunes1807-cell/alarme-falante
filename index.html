@@ -44,6 +44,14 @@ body {
   padding-bottom: 90px;
   overflow-x: hidden;
 }
+body.child-mode {
+  padding-bottom: 0;
+  background:
+    radial-gradient(circle at top left, rgba(245,200,66,0.22), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(76,175,125,0.2), transparent 32%),
+    var(--bg);
+}
+body.child-mode .nav { display: none; }
 
 /* ============ BACKGROUND CALM SHAPES ============ */
 .bg-shapes {
@@ -79,7 +87,7 @@ body {
 .nav-tab:active { transform: scale(.94); }
 
 /* ============ PAGES ============ */
-.page { display: none; padding: 16px; position: relative; z-index: 1; }
+.page { display: none; padding: 16px; position: relative; z-index: 1; max-width: 760px; margin: 0 auto; }
 .page.active { display: block; }
 
 /* ============ HEADER CARD ============ */
@@ -589,6 +597,174 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
 .btn-cancel:hover { border-color:var(--red);color:var(--red); }
 .btn-save { flex:2;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:14px;color:#fff;font-family:var(--ff);font-size:1rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,0.2); }
 .btn-save:hover { transform:translateY(-1px); }
+
+/* ============ CHILD MODE ============ */
+.page.child-page {
+  display: none;
+  min-height: 100vh;
+  padding: clamp(14px, 4vw, 28px);
+  flex-direction: column;
+  justify-content: center;
+}
+.page.child-page.active { display: flex; }
+.child-shell {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+.child-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.child-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--ff);
+  color: var(--text);
+  font-size: clamp(1.1rem, 5vw, 1.55rem);
+}
+.child-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: var(--card);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow);
+  font-size: 2rem;
+}
+.child-exit {
+  border: 2px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-family: var(--fb);
+  font-weight: 900;
+  cursor: pointer;
+}
+.child-card {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 30px;
+  padding: clamp(22px, 7vw, 42px);
+  box-shadow: var(--shadowLg);
+  text-align: center;
+}
+.child-kicker {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+}
+.child-emoji {
+  font-size: clamp(4.8rem, 24vw, 8.5rem);
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.child-task {
+  font-family: var(--ff);
+  font-size: clamp(2rem, 11vw, 4.3rem);
+  color: var(--text);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+.child-tip {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: clamp(1rem, 4.5vw, 1.35rem);
+  font-weight: 900;
+}
+.child-next {
+  background: rgba(76,175,125,0.12);
+  color: var(--green);
+  border: 2px solid rgba(76,175,125,0.24);
+  border-radius: 18px;
+  padding: 13px 14px;
+  font-family: var(--ff);
+  font-size: clamp(1rem, 4.8vw, 1.35rem);
+  text-align: center;
+}
+.child-actions {
+  display: grid;
+  gap: 10px;
+}
+.child-done {
+  min-height: 88px;
+  border: 0;
+  border-radius: 28px;
+  background: linear-gradient(135deg, var(--green), #26985c);
+  color: #fff;
+  font-family: var(--ff);
+  font-size: clamp(1.8rem, 9vw, 3.2rem);
+  box-shadow: 0 10px 30px rgba(76,175,125,0.35);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.child-speak {
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  color: var(--accent);
+  font-family: var(--ff);
+  font-size: clamp(1rem, 4.5vw, 1.35rem);
+  padding: 16px;
+  cursor: pointer;
+}
+.child-empty {
+  font-family: var(--ff);
+  font-size: clamp(1.6rem, 8vw, 3rem);
+  line-height: 1.15;
+  color: var(--text);
+}
+.mode-card {
+  background: linear-gradient(135deg, rgba(76,175,125,0.16), rgba(74,144,184,0.14));
+  border: 2px solid rgba(76,175,125,0.24);
+  border-radius: 22px;
+  padding: 15px;
+  margin-bottom: 14px;
+}
+.mode-card-title {
+  font-family: var(--ff);
+  color: var(--text);
+  font-size: 1.08rem;
+  margin-bottom: 4px;
+}
+.mode-card-sub {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 520px) {
+  body { padding-bottom: 76px; }
+  .page { padding: 12px; }
+  .nav-tab { font-size: 0.58rem; padding: 8px 2px 10px; }
+  .nav-tab .ti { font-size: 1.25rem; }
+  .header-card, .card, .routine-card, .profile-edit-card { border-radius: 22px; }
+  .header-top { align-items: flex-start; gap: 12px; }
+  .speak-now-btn { padding: 9px 10px; font-size: 0.72rem; }
+  .profile-row { overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .profile-row::-webkit-scrollbar { display: none; }
+  .profile-pill { min-width: 116px; }
+  .time-row { gap: 7px; }
+  .t-input { width: 76px; font-size: 1.9rem; }
+  .alarm-item { align-items: flex-start; }
+  .a-right { flex-direction: column; }
+  .rmodes, .sound-pills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rmode, .sound-pill { justify-content: center; min-height: 42px; text-align: center; }
+  .drow { flex-direction: column; }
+}
 </style>
 </head>
 <body>
@@ -607,6 +783,7 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
   <button class="nav-tab"        onclick="showPage('calendar')" id="tab-calendar"><span class="ti">📅</span>Agenda</button>
   <button class="nav-tab"        onclick="showPage('profile')" id="tab-profile"><span class="ti">🌟</span>Perfil</button>
   <button class="nav-tab"        onclick="showPage('themes')"  id="tab-themes"><span class="ti">🎨</span>Temas</button>
+  <button class="nav-tab"        onclick="showPage('child')"   id="tab-child"><span class="ti">OK</span>Criança</button>
 </nav>
 
 <!-- ===== HOME ===== -->
@@ -631,6 +808,12 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
 
   <!-- Perfis -->
   <div class="profile-row" id="homeProfileRow"></div>
+
+  <div class="mode-card">
+    <div class="mode-card-title">Tela da criança</div>
+    <div class="mode-card-sub">Mostra somente a tarefa atual, com voz, botão grande e aviso da próxima tarefa.</div>
+    <button class="btn-big" onclick="showPage('child')" style="font-size:1rem;padding:12px">Abrir modo criança</button>
+  </div>
 
   <!-- Rotina rápida do dia -->
   <div class="sec-title">📋 Rotina de hoje <span class="sec-badge" id="todayBadge">0%</span></div>
@@ -775,6 +958,30 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
 <div class="page" id="page-themes">
   <div class="sec-title">🎨 Escolha seu Tema</div>
   <div id="themeGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px"></div>
+</div>
+
+<!-- ===== TELA DA CRIANCA ===== -->
+<div class="page child-page" id="page-child">
+  <div class="child-shell">
+    <div class="child-top">
+      <div class="child-profile">
+        <div class="child-avatar" id="childAvatar"></div>
+        <div id="childName">Criança</div>
+      </div>
+      <button class="child-exit" onclick="exitChildMode()">Modo mãe</button>
+    </div>
+    <div class="child-card" id="childTaskCard">
+      <div class="child-kicker" id="childRoutineName">Tarefa atual</div>
+      <div class="child-emoji" id="childTaskEmoji">OK</div>
+      <div class="child-task" id="childTaskName">Carregando</div>
+      <div class="child-tip" id="childTaskTip"></div>
+    </div>
+    <div class="child-next" id="childNextText">Próxima tarefa em 10 minutos.</div>
+    <div class="child-actions">
+      <button class="child-done" onclick="completeChildTask()">Já fiz</button>
+      <button class="child-speak" onclick="speakChildTask()">Falar de novo</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== EDIT ALARM MODAL ===== -->
@@ -1021,6 +1228,7 @@ let annActive     = JSON.parse(localStorage.getItem('annActive')   || 'false');
 let annInterval   = parseInt(localStorage.getItem('annInterval')   || '60');
 let annTimer      = null;
 let selectedAlarmProfile = 0;
+let activeRoutineAlarm = null;
 
 // ================================================================
 // VOICES
@@ -1132,6 +1340,7 @@ function selectProfile(i, from){
   renderProfileRow('routineProfileRow');
   renderRoutine();
   renderQuickRoutine();
+  renderChildMode();
   const p=profiles[i];
   speak(`Perfil de ${p.name} selecionado!`);
 }
@@ -1173,11 +1382,13 @@ function renderProfileEditor(){
 function updateProfileName(i,v){
   profiles[i].name=v||'Criança'; saveProfiles();
   renderProfileRow('homeProfileRow'); renderProfileRow('routineProfileRow');
+  renderChildMode();
 }
 function setAvatar(i,av){
   profiles[i].avatar=av; saveProfiles();
   renderProfileEditor();
   renderProfileRow('homeProfileRow'); renderProfileRow('routineProfileRow');
+  renderChildMode();
   floatE(null,av);
 }
 function saveProfiles(){ localStorage.setItem('profiles',JSON.stringify(profiles)); }
@@ -1203,6 +1414,7 @@ function getProfileRoutine(profIdx, rId){
 }
 
 function getRoutineKey(routineId){ return `routine_${activeProfile}_${routineId}_${new Date().toDateString()}`; }
+function getRoutineCompleteKey(routineId){ return `routine_done_${activeProfile}_${routineId}_${new Date().toDateString()}`; }
 
 function getRoutineProgress(rId){
   return JSON.parse(localStorage.getItem(getRoutineKey(rId))||'{}');
@@ -1309,8 +1521,10 @@ function checkRoutineComplete(rId){
   if(steps.length === 0) return;
   const done = steps.every(s => progress[s.id]);
   const banner = document.getElementById('banner-'+rId);
-  if(done && banner && !banner.classList.contains('show')){
-    banner.classList.add('show');
+  const completeKey = getRoutineCompleteKey(rId);
+  if(done && !localStorage.getItem(completeKey)){
+    localStorage.setItem(completeKey, '1');
+    if(banner) banner.classList.add('show');
     addStar(activeProfile, 1);
     const p = profiles[activeProfile];
     p.stats.routinesDone = (p.stats.routinesDone||0)+1;
@@ -1325,7 +1539,9 @@ function checkRoutineComplete(rId){
 
 function resetRoutine(rId){
   localStorage.removeItem(getRoutineKey(rId));
+  localStorage.removeItem(getRoutineCompleteKey(rId));
   renderRoutine(); renderQuickRoutine();
+  renderChildMode();
 }
 
 // ---- ROUTINE EDITOR ----
@@ -1443,6 +1659,107 @@ function renderQuickRoutine(){
         </div>
       </div>
     </div>`;
+}
+
+// ================================================================
+// CHILD MODE
+// ================================================================
+function getCurrentRoutineId(){
+  const H = new Date().getHours();
+  return H < 12 ? 'manha' : H < 18 ? 'tarde' : 'noite';
+}
+
+function getFirstPendingTask(profIdx=activeProfile){
+  const preferred = getCurrentRoutineId();
+  const order = [preferred, ...Object.keys(ROUTINE_META).filter(id => id !== preferred)];
+  for(const rId of order){
+    const oldProfile = activeProfile;
+    activeProfile = profIdx;
+    const progress = getRoutineProgress(rId);
+    activeProfile = oldProfile;
+    const steps = getProfileRoutine(profIdx, rId);
+    const step = steps.find(s => !progress[s.id]);
+    if(step) return { rId, step };
+  }
+  return null;
+}
+
+function minutesUntilNextTask(profIdx=activeProfile, currentStepId=null){
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const timed = [];
+  Object.keys(ROUTINE_META).forEach(rId => {
+    getProfileRoutine(profIdx, rId).forEach(step => {
+      if(step.id === currentStepId || step.hour == null) return;
+      const total = step.hour*60 + (step.min || 0);
+      if(total > nowMin) timed.push(total - nowMin);
+    });
+  });
+  if(timed.length) return Math.min(...timed);
+  return 10;
+}
+
+function renderChildMode(){
+  const p = profiles[activeProfile] || profiles[0];
+  const current = getFirstPendingTask(activeProfile);
+  document.getElementById('childAvatar').textContent = p.avatar;
+  document.getElementById('childName').textContent = p.name;
+
+  if(!current){
+    document.getElementById('childRoutineName').textContent = 'Tudo pronto';
+    document.getElementById('childTaskEmoji').textContent = '⭐';
+    document.getElementById('childTaskName').innerHTML = '<span class="child-empty">Todas as tarefas foram feitas!</span>';
+    document.getElementById('childTaskTip').textContent = 'Pode descansar. Muito bem!';
+    document.getElementById('childNextText').textContent = 'Não tem próxima tarefa agora.';
+    return;
+  }
+
+  const { rId, step } = current;
+  const min = minutesUntilNextTask(activeProfile, step.id);
+  document.getElementById('childRoutineName').textContent = ROUTINE_META[rId].title;
+  document.getElementById('childTaskEmoji').textContent = step.emoji || '⭐';
+  document.getElementById('childTaskName').textContent = step.name;
+  document.getElementById('childTaskTip').textContent = step.tip || 'Você consegue!';
+  document.getElementById('childNextText').textContent = `Próxima tarefa em ${min} minuto${min === 1 ? '' : 's'}.`;
+}
+
+function childTaskSpeech(){
+  const p = profiles[activeProfile] || profiles[0];
+  const current = getFirstPendingTask(activeProfile);
+  if(!current) return `${p.name}, todas as tarefas foram feitas. Muito bem!`;
+  const { step } = current;
+  const min = minutesUntilNextTask(activeProfile, step.id);
+  return `${p.name}, agora é hora de ${step.name}. ${step.tip || ''} Depois, a próxima tarefa será em ${min} minuto${min === 1 ? '' : 's'}.`;
+}
+
+function speakChildTask(){
+  speak(childTaskSpeech(), 0.86);
+}
+
+function completeChildTask(){
+  const current = getFirstPendingTask(activeProfile);
+  const p = profiles[activeProfile] || profiles[0];
+  if(!current){
+    speak(`${p.name}, não tem tarefa pendente agora. Muito bem!`, 0.9);
+    return;
+  }
+  setStepDone(current.rId, current.step.id, true);
+  checkRoutineComplete(current.rId);
+  renderQuickRoutine();
+  renderRoutine();
+  renderChildMode();
+  burst();
+  speak(`Muito bem, ${p.name}! Você fez ${current.step.name}.`, 0.9);
+}
+
+function exitChildMode(){
+  const ok = prompt('Digite 1234 para sair para o modo mãe:');
+  if(ok === '1234'){
+    document.body.classList.remove('child-mode');
+    showPage('home');
+  } else if(ok !== null) {
+    speak('Senha incorreta.', 0.9);
+  }
 }
 
 // ================================================================
@@ -1569,7 +1886,7 @@ function checkAlarms(now){
       steps.forEach(step => {
         if(step.hour == null) return;
         if(step.hour === H && step.min === M){
-          triggerRoutineStep(prof, step);
+          triggerRoutineStep(prof, step, profIdx, rId);
         }
       });
     });
@@ -1582,9 +1899,10 @@ function getProfileRoutineByIdx(profIdx, rId){
   return p.routine[rId];
 }
 
-function triggerRoutineStep(prof, step){
+function triggerRoutineStep(prof, step, profIdx, rId){
   if(activeAlarmId !== null) return;
   activeAlarmId = 'routine_'+step.id;
+  activeRoutineAlarm = { profIdx, rId, stepId: step.id };
   const t = `${pad(step.hour)}:${pad(step.min)}`;
   document.getElementById('ovProfile').textContent = prof.avatar;
   document.getElementById('ovBell').textContent    = step.emoji;
@@ -1593,9 +1911,11 @@ function triggerRoutineStep(prof, step){
   document.getElementById('overlay').classList.add('on');
   document.body.style.overflow = 'hidden';
   playAlarmSound('gentle');
-  startBalloonGame();
-  document.getElementById('btnStop').style.display = 'none';
-  const msg = `Alarme! ${prof.name}! ${step.name}! ${step.tip || ''}`;
+  document.getElementById('balloonGame').classList.remove('show');
+  document.getElementById('btnStop').textContent = 'JÁ FIZ';
+  document.getElementById('btnStop').style.display = 'flex';
+  const min = minutesUntilNextTask(profIdx, step.id);
+  const msg = `Alarme! ${prof.name}, agora é hora de ${step.name}. ${step.tip || ''} Próxima tarefa em ${min} minuto${min === 1 ? '' : 's'}.`;
   speak(msg, 0.85, 800);
   speakIval = setInterval(()=>speak(msg, 0.85), 10000);
   if('Notification' in window && Notification.permission==='granted'){
@@ -1605,6 +1925,7 @@ function triggerRoutineStep(prof, step){
 
 function triggerAlarm(a){
   activeAlarmId=a.id;
+  activeRoutineAlarm = null;
   const t=`${pad(a.hour)}:${pad(a.min)}`;
   const p=profiles[a.profileId||0]||profiles[0];
   document.getElementById('ovProfile').textContent=p.avatar;
@@ -1618,10 +1939,12 @@ function triggerAlarm(a){
 
   if(a.isBirthday){
     document.getElementById('balloonGame').classList.remove('show');
+    document.getElementById('btnStop').textContent = 'PARAR ALARME';
     document.getElementById('btnStop').style.display='flex';
     speak(`Parabéns, ${p.name}! Feliz aniversário!`, 0.82);
   } else {
     startBalloonGame();
+    document.getElementById('btnStop').textContent = 'PARAR ALARME';
     document.getElementById('btnStop').style.display='none';
   }
 
@@ -1671,10 +1994,23 @@ function stopAlarm(){
   document.getElementById('overlay').classList.remove('on');
   document.getElementById('balloonGame').classList.remove('show');
   document.body.style.overflow='';
-  const p=profiles[activeAlarmId!==null?(alarms.find(a=>a.id===activeAlarmId)||{}).profileId||0:0]||profiles[0];
+  let p=profiles[activeAlarmId!==null?(alarms.find(a=>a.id===activeAlarmId)||{}).profileId||0:0]||profiles[0];
+  if(activeRoutineAlarm){
+    p = profiles[activeRoutineAlarm.profIdx] || p;
+    const oldProfile = activeProfile;
+    activeProfile = activeRoutineAlarm.profIdx;
+    setStepDone(activeRoutineAlarm.rId, activeRoutineAlarm.stepId, true);
+    checkRoutineComplete(activeRoutineAlarm.rId);
+    activeProfile = oldProfile;
+    renderRoutine();
+    renderQuickRoutine();
+    renderChildMode();
+  }
   activeAlarmId=null;
+  activeRoutineAlarm=null;
   burst();
-  addStar(p.id||0,1);
+  const profileIndex = profiles.indexOf(p);
+  addStar(profileIndex >= 0 ? profileIndex : 0,1);
   p.stats.alarmsCreated=(p.stats.alarmsCreated||0);
   saveProfiles();
   showReward(`${p.name} desligou! ⭐`,p.avatar,'⭐ +1 estrela!');
@@ -2146,11 +2482,14 @@ function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  document.getElementById('tab-'+id).classList.add('active');
+  document.body.classList.toggle('child-mode', id === 'child');
+  const tab = document.getElementById('tab-'+id);
+  if(tab) tab.classList.add('active');
   if(id==='calendar') renderCalendar();
   if(id==='profile'){ renderProfileEditor(); }
   if(id==='routine'){ renderProfileRow('routineProfileRow'); renderRoutine(); }
   if(id==='themes')  renderThemePage();
+  if(id==='child'){ renderChildMode(); setTimeout(speakChildTask, 600); }
 }
 
 // ================================================================
@@ -2172,6 +2511,9 @@ renderAlarmProfileBtns();
 initAnn();
 loadWeather();
 applyTheme(currentTheme);
+if(new URLSearchParams(location.search).get('modo') === 'crianca' || location.hash === '#crianca'){
+  showPage('child');
+}
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
 </script>
