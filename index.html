@@ -739,6 +739,17 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
   background: rgba(76,175,125,0.08);
   border-color: rgba(76,175,125,0.24);
 }
+.child-actions:not(.alarming) .child-silence { display: none; }
+.child-silence {
+  border: 2px solid rgba(224,85,85,0.22);
+  border-radius: 8px;
+  background: rgba(224,85,85,0.08);
+  color: var(--red);
+  font-family: var(--ff);
+  font-size: clamp(1rem, 4.5vw, 1.35rem);
+  padding: 16px;
+  cursor: pointer;
+}
 .child-wait {
   display: none;
   background: rgba(245,200,66,0.16);
@@ -1064,6 +1075,7 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
     <div class="child-next" id="childNextText">Próxima tarefa em 10 minutos.</div>
     <div class="child-actions locked" id="childActions">
       <button class="child-done" onclick="completeChildTask()">Já fiz</button>
+      <button class="child-silence" onclick="silenceRoutineAlarm()">Silenciar agora</button>
       <button class="child-speak" onclick="speakChildTask()">Falar de novo</button>
     </div>
     <div class="child-wait" id="childWait">Vá fazer a tarefa. O botão aparece daqui a 10 minutos.</div>
@@ -1924,6 +1936,7 @@ function renderChildMode(){
   const isAlarm = !!active;
   const canFinish = isAlarm && !!activeRoutineAlarm.canFinish;
   document.getElementById('childActions')?.classList.toggle('locked', !canFinish);
+  document.getElementById('childActions')?.classList.toggle('alarming', isAlarm);
   document.getElementById('childWait')?.classList.toggle('show', isAlarm && !canFinish);
   document.getElementById('childTaskCard')?.classList.toggle('alarming', isAlarm);
   document.getElementById('childConfirm')?.classList.remove('show');
@@ -1994,6 +2007,16 @@ function confirmChildDone(done){
   }
   speak('Tudo bem. Termine a tarefa. O alarme vai continuar tocando.', 0.9);
   speakChildTask();
+}
+
+function silenceRoutineAlarm(){
+  if(!activeRoutineAlarm) return;
+  stopBeeps();
+  speechSynthesis.cancel();
+  if(speakIval){clearInterval(speakIval);speakIval=null;}
+  activeRoutineAlarm.silenced = true;
+  renderChildMode();
+  speak('Som desligado. FaÃ§a a tarefa. Depois volte para apertar JÃ¡ fiz.', 0.9);
 }
 
 function unlockRoutineDoneButton(){
