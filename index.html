@@ -1510,6 +1510,70 @@ function getProfileRoutine(profIdx, rId){
   return p.routine[rId];
 }
 
+function routineIdForHour(hour){
+  return hour < 12 ? 'manha' : hour < 18 ? 'tarde' : 'noite';
+}
+
+function alarmMatchesDate(a, now=new Date()){
+  const D=now.getDate(), Mo=now.getMonth(), Y=now.getFullYear(), WD=now.getDay();
+  if(!a || !a.active) return false;
+  if(a.mode==='daily') return true;
+  if(a.mode==='weekdays') return WD>=1&&WD<=5;
+  if(a.mode==='weekdays_custom') return (a.days||[]).includes(WD);
+  if(a.mode==='weekly') return WD===a.weekDay;
+  if(a.mode==='monthly') return D===a.monthDay;
+  if(a.mode==='once'&&a.date) return D===a.date.d&&Mo===a.date.mo&&Y===a.date.y;
+  return false;
+}
+
+function getAlarmById(id){ return alarms.find(a => String(a.id) === String(id)); }
+
+function routineStepIsVisibleToday(step, now=new Date()){
+  if(!step.sourceAlarmId) return true;
+  const a = getAlarmById(step.sourceAlarmId);
+  return alarmMatchesDate(a, now);
+}
+
+function getRoutineStepsForDay(profIdx, rId, now=new Date()){
+  return getProfileRoutine(profIdx, rId).filter(step => routineStepIsVisibleToday(step, now));
+}
+
+function removeRoutineStepForAlarm(alarmId){
+  profiles.forEach((p, profIdx) => {
+    Object.keys(ROUTINE_META).forEach(rId => {
+      const steps = getProfileRoutine(profIdx, rId);
+      for(let i=steps.length-1;i>=0;i--){
+        if(String(steps[i].sourceAlarmId) === String(alarmId)) steps.splice(i,1);
+      }
+    });
+  });
+}
+
+function syncAlarmToRoutine(alarm){
+  if(!alarm) return;
+  removeRoutineStepForAlarm(alarm.id);
+  const rId = routineIdForHour(alarm.hour);
+  const steps = getProfileRoutine(alarm.profileId||0, rId);
+  const step = {
+    id: alarm.routineStepId || `alarm_step_${alarm.id}`,
+    sourceAlarmId: alarm.id,
+    emoji: alarm.isBirthday ? '🎂' : '⏰',
+    name: alarm.label || 'Alarme',
+    tip: `Tarefa marcada para ${pad(alarm.hour)}:${pad(alarm.min)}.`,
+    hour: alarm.hour,
+    min: alarm.min
+  };
+  steps.push(step);
+  alarm.routineId = rId;
+  alarm.routineStepId = step.id;
+}
+
+function syncAllAlarmsToRoutines(){
+  alarms.forEach(syncAlarmToRoutine);
+  saveProfiles();
+  saveAlarms();
+}
+
 function getRoutineKey(routineId){ return `routine_${activeProfile}_${routineId}_${new Date().toDateString()}`; }
 function getRoutineCompleteKey(routineId){ return `routine_done_${activeProfile}_${routineId}_${new Date().toDateString()}`; }
 
@@ -1530,7 +1594,7 @@ function renderRoutine(){
   if(!p){ el.innerHTML='<div class="empty">Selecione um perfil acima.</div>'; return; }
 
   Object.values(ROUTINE_META).forEach(meta => {
-    const steps = getProfileRoutine(activeProfile, meta.id);
+    const steps = getRoutineStepsForDay(activeProfile, meta.id);
     const progress = getRoutineProgress(meta.id);
     const total = steps.length;
     const done = steps.filter(s => progress[s.id]).length;
@@ -1601,7 +1665,7 @@ function toggleStep(rId, sId, el){
   setStepDone(rId, sId, newDone);
   el.classList.toggle('done', newDone);
   el.querySelector('.step-check').textContent = newDone ? '✓' : '';
-  const steps = getProfileRoutine(activeProfile, rId);
+    const steps = getRoutineStepsForDay(activeProfile, rId);
   const step = steps.find(s=>s.id===sId);
   if(newDone && step){
     const p = profiles[activeProfile];
@@ -1613,7 +1677,7 @@ function toggleStep(rId, sId, el){
 }
 
 function checkRoutineComplete(rId){
-  const steps = getProfileRoutine(activeProfile, rId);
+  const steps = getRoutineStepsForDay(activeProfile, rId);
   const progress = getRoutineProgress(rId);
   if(steps.length === 0) return;
   const done = steps.every(s => progress[s.id]);
@@ -1688,7 +1752,7 @@ function renderRoutineEditorSteps(){
 }
 
 function moveStep(rId, idx, dir){
-  const steps = getProfileRoutine(activeProfile, rId);
+  const steps = getRoutineStepsForDay(activeProfile, rId);
   const newIdx = idx + dir;
   if(newIdx < 0 || newIdx >= steps.length) return;
   [steps[idx], steps[newIdx]] = [steps[newIdx], steps[idx]];
@@ -1696,7 +1760,7 @@ function moveStep(rId, idx, dir){
 }
 
 function removeStep(rId, idx){
-  const steps = getProfileRoutine(activeProfile, rId);
+  const steps = getRoutineStepsForDay(activeProfile, rId);
   steps.splice(idx, 1);
   saveProfiles(); renderRoutineEditorSteps();
 }
@@ -1774,7 +1838,7 @@ function getFirstPendingTask(profIdx=activeProfile){
     activeProfile = profIdx;
     const progress = getRoutineProgress(rId);
     activeProfile = oldProfile;
-    const steps = getProfileRoutine(profIdx, rId);
+    const steps = getRoutineStepsForDay(profIdx, rId);
     const step = steps.find(s => !progress[s.id]);
     if(step) return { rId, step };
   }
@@ -1795,7 +1859,7 @@ function minutesUntilNextTask(profIdx=activeProfile, currentStepId=null){
   const nowMin = now.getHours()*60 + now.getMinutes();
   const timed = [];
   Object.keys(ROUTINE_META).forEach(rId => {
-    getProfileRoutine(profIdx, rId).forEach(step => {
+    getRoutineStepsForDay(profIdx, rId).forEach(step => {
       if(step.id === currentStepId || step.hour == null) return;
       const total = step.hour*60 + (step.min || 0);
       if(total > nowMin) timed.push(total - nowMin);
@@ -1997,14 +2061,21 @@ function checkAlarms(now){
   // Check regular alarms
   for(const a of alarms){
     if(!a.active || !isDueNow(a.hour, a.min, now) || wasAlarmFired('alarm', a.id, now)) continue;
-    let fire=false;
-    if(a.mode==='daily')              fire=true;
-    else if(a.mode==='weekdays')      fire=WD>=1&&WD<=5;
-    else if(a.mode==='weekdays_custom') fire=(a.days||[]).includes(WD);
-    else if(a.mode==='weekly')        fire=WD===a.weekDay;
-    else if(a.mode==='monthly')       fire=D===a.monthDay;
-    else if(a.mode==='once')          fire=D===a.date.d&&Mo===a.date.mo&&Y===a.date.y;
-    if(fire){ markAlarmFired('alarm', a.id, now); triggerAlarm(a); return; }
+    if(alarmMatchesDate(a, now)){
+      markAlarmFired('alarm', a.id, now);
+      if(a.routineStepId){
+        const profIdx = a.profileId || 0;
+        const rId = a.routineId || routineIdForHour(a.hour);
+        const step = getProfileRoutine(profIdx, rId).find(s => s.id === a.routineStepId);
+        if(step){
+          markAlarmFired('routine', `${profIdx}_${rId}_${step.id}`, now);
+          triggerRoutineStep(profiles[profIdx] || profiles[0], step, profIdx, rId);
+          return;
+        }
+      }
+      triggerAlarm(a);
+      return;
+    }
   }
 
   // Check routine step alarms (all profiles, all routines)
@@ -2014,6 +2085,7 @@ function checkAlarms(now){
       const steps = getProfileRoutineByIdx(profIdx, rId);
       steps.forEach(step => {
         if(step.hour == null) return;
+        if(step.sourceAlarmId) return;
         const stepKey = `${profIdx}_${rId}_${step.id}`;
         if(isDueNow(step.hour, step.min, now) && !wasAlarmFired('routine', stepKey, now)){
           if(activeAlarmId !== null) return;
@@ -2176,12 +2248,13 @@ function addAlarm(){
     alarm.date={d:parseInt(document.getElementById('onceDay').value)||1,mo:parseInt(document.getElementById('onceMonth').value),y:parseInt(document.getElementById('onceYear').value)||new Date().getFullYear()};
   }
   if(isBirthday){ profiles[selectedAlarmProfile].stats.birthdayAlarm=true; saveProfiles(); }
+  syncAlarmToRoutine(alarm);
   alarms.push(alarm);
   alarms.sort((a,b)=>a.hour*60+a.min-(b.hour*60+b.min));
   profiles[selectedAlarmProfile].stats.alarmsCreated=(profiles[selectedAlarmProfile].stats.alarmsCreated||0)+1;
-  saveProfiles(); saveAlarms(); renderAlarms();
+  saveProfiles(); saveAlarms(); renderAlarms(); renderRoutine(); renderQuickRoutine(); renderChildMode();
   const p=profiles[selectedAlarmProfile];
-  speak(`Alarme de ${p.name} salvo para as ${pad(H)} e ${pad(M)}! ${label||''}`);
+  speak(`Alarme de ${p.name} salvo para as ${pad(H)} e ${pad(M)}! Ele tambÃ©m entrou na rotina. ${label||''}`);
   showPage('alarms');
 }
 
@@ -2208,7 +2281,7 @@ function renderAlarms(){
         <div class="a-time">${pad(a.hour)}:${pad(a.min)}</div>
         <div class="a-label">${a.isBirthday?'🎂 ':''} ${a.label||'Alarme'} · ${p.avatar} ${p.name}</div>
         <div class="a-repeat">${repeatLabel(a)}</div>
-        <div class="a-sound">${snd.label}</div>
+        <div class="a-sound">${snd.label} · vai para ${ROUTINE_META[a.routineId||routineIdForHour(a.hour)]?.title||'rotina'}</div>
       </div>
       <div class="a-right">
         <button class="ico-btn" style="color:var(--accent)" onclick="openEditModal(${a.id})" title="Editar">✏️</button>
@@ -2220,7 +2293,12 @@ function renderAlarms(){
 }
 
 function toggleA(id,v){ const a=alarms.find(x=>x.id===id); if(a){a.active=v;saveAlarms();renderAlarms();} }
-function delAlarm(id){ alarms=alarms.filter(x=>x.id!==id); saveAlarms(); renderAlarms(); renderCalendar(); }
+function delAlarm(id){
+  removeRoutineStepForAlarm(id);
+  alarms=alarms.filter(x=>x.id!==id);
+  saveProfiles(); saveAlarms();
+  renderAlarms(); renderCalendar(); renderRoutine(); renderQuickRoutine(); renderChildMode();
+}
 
 // ================================================================
 // REPEAT MODE
@@ -2605,10 +2683,11 @@ function saveEditAlarm(){
     };
   }
 
+  syncAlarmToRoutine(a);
   alarms.sort((x,y) => x.hour*60+x.min - (y.hour*60+y.min));
-  saveAlarms(); renderAlarms();
+  saveProfiles(); saveAlarms(); renderAlarms(); renderRoutine(); renderQuickRoutine(); renderChildMode();
   closeEditModal();
-  speak(`Alarme atualizado para as ${pad(a.hour)} e ${pad(a.min)}!`);
+  speak(`Alarme atualizado para as ${pad(a.hour)} e ${pad(a.min)} e sincronizado com a rotina!`);
   floatE(null,'✅');
 }
 
@@ -2638,6 +2717,7 @@ document.getElementById('onceDay').value=now0.getDate();
 document.getElementById('onceMonth').value=now0.getMonth();
 document.getElementById('onceYear').value=now0.getFullYear();
 document.getElementById('monthlyDay').value=now0.getDate();
+syncAllAlarmsToRoutines();
 renderProfileRow('homeProfileRow');
 renderProfileRow('routineProfileRow');
 renderQuickRoutine();
