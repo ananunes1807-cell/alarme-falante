@@ -1078,7 +1078,7 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
       <button class="child-silence" onclick="silenceRoutineAlarm()">Silenciar agora</button>
       <button class="child-speak" onclick="speakChildTask()">Falar de novo</button>
     </div>
-    <div class="child-wait" id="childWait">Vá fazer a tarefa. O botão aparece daqui a 10 minutos.</div>
+    <div class="child-wait" id="childWait">Vá fazer a tarefa. O botão aparece daqui a 3 minutos.</div>
     <div class="child-confirm" id="childConfirm">
       <div class="child-confirm-title">Você fez mesmo?</div>
       <div class="child-confirm-row">
@@ -1335,7 +1335,7 @@ let annTimer      = null;
 let selectedAlarmProfile = 0;
 let activeRoutineAlarm = null;
 const ALARM_GRACE_MINUTES = 5;
-const TASK_DONE_DELAY_MINUTES = 10;
+const TASK_DONE_DELAY_MINUTES = 3;
 let appReadyForAlarms = false;
 let taskDoneUnlockTimer = null;
 
@@ -2013,7 +2013,6 @@ function silenceRoutineAlarm(){
   if(!activeRoutineAlarm) return;
   stopBeeps();
   speechSynthesis.cancel();
-  if(speakIval){clearInterval(speakIval);speakIval=null;}
   activeRoutineAlarm.silenced = true;
   renderChildMode();
   speak('Som desligado. FaÃ§a a tarefa. Depois volte para apertar JÃ¡ fiz.', 0.9);
