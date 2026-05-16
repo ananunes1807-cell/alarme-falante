@@ -1230,6 +1230,7 @@ let annTimer      = null;
 let selectedAlarmProfile = 0;
 let activeRoutineAlarm = null;
 const ALARM_GRACE_MINUTES = 5;
+let appReadyForAlarms = false;
 
 // ================================================================
 // VOICES
@@ -1279,14 +1280,14 @@ function tick(){
   let gr = H<12?'Bom dia! 🌞': H<18?'Boa tarde! 🌤️':'Boa noite! 🌙';
   const p=profiles[activeProfile];
   document.getElementById('greeting').textContent=`${gr} ${p?p.name:''}`;
-  if(activeAlarmId===null) checkAlarms(n);
+  if(appReadyForAlarms && activeAlarmId===null) checkAlarms(n);
 }
 setInterval(tick,500); tick();
 document.addEventListener('visibilitychange', () => {
-  if(!document.hidden && activeAlarmId === null) checkAlarms(new Date());
+  if(appReadyForAlarms && !document.hidden && activeAlarmId === null) checkAlarms(new Date());
 });
 window.addEventListener('focus', () => {
-  if(activeAlarmId === null) checkAlarms(new Date());
+  if(appReadyForAlarms && activeAlarmId === null) checkAlarms(new Date());
 });
 
 function makeTimeSpeech(H,M){
@@ -2531,6 +2532,8 @@ renderAlarmProfileBtns();
 initAnn();
 loadWeather();
 applyTheme(currentTheme);
+appReadyForAlarms = true;
+checkAlarms(new Date());
 if(new URLSearchParams(location.search).get('modo') === 'crianca' || location.hash === '#crianca'){
   showPage('child');
 }
