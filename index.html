@@ -628,6 +628,7 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
 }
 .child-date {
   margin-top: -4px;
+  order: -1;
   color: var(--green);
   font-family: var(--ff);
   font-size: clamp(1rem, 4.2vw, 1.35rem);
@@ -1375,6 +1376,23 @@ function pad(n){ return String(n).padStart(2,'0'); }
 function todayLongText(d=new Date()){
   return `Hoje Ã© ${DAYS[d.getDay()]}, ${d.getDate()} de ${MONTHS[d.getMonth()]} de ${d.getFullYear()}`;
 }
+function todayLongText(d=new Date()){
+  const days = ['domingo','segunda-feira','terca-feira','quarta-feira','quinta-feira','sexta-feira','sabado'];
+  const months = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return `Hoje \u00e9 ${days[d.getDay()]} dia ${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}.`;
+}
+function profileNamesText(){
+  const names = profiles.map(p => (p.name || '').trim()).filter(Boolean);
+  if(names.length === 0) return 'crianca';
+  if(names.length === 1) return names[0];
+  if(names.length === 2) return `${names[0]} e ${names[1]}`;
+  return `${names.slice(0,-1).join(', ')} e ${names[names.length-1]}`;
+}
+function dayGreetingText(d=new Date()){
+  const H = d.getHours();
+  const part = H < 12 ? 'bom dia' : H < 18 ? 'boa tarde' : 'boa noite';
+  return `Tenha uma ${part}, ${profileNamesText()}.`;
+}
 function dateStamp(d=new Date()){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function alarmFireKey(kind, id, d=new Date()){ return `alarm_fired_${kind}_${id}_${dateStamp(d)}`; }
 function wasAlarmFired(kind, id, d=new Date()){ return localStorage.getItem(alarmFireKey(kind, id, d)) === '1'; }
@@ -1946,7 +1964,7 @@ function renderChildMode(){
   const active = getActiveRoutineTask();
   const current = active ? { rId: active.rId, step: active.step } : getFirstPendingTask(activeProfile);
   const childHello = document.getElementById('childHello');
-  if(childHello) childHello.textContent = `Olá ${active ? active.prof.name : p.name}`;
+  if(childHello) childHello.textContent = dayGreetingText();
   const isAlarm = !!active;
   const canFinish = isAlarm && !!activeRoutineAlarm.canFinish;
   document.getElementById('childActions')?.classList.toggle('locked', !canFinish);
@@ -1995,6 +2013,15 @@ function childTaskSpeech(){
   const { step } = current;
   const min = minutesUntilNextTask(activeProfile, step.id);
   return `${todayLongText()}. ${p.name}, agora e hora de ${step.name}. ${step.tip || ''} Depois, a proxima tarefa sera em ${min} minuto${min === 1 ? '' : 's'}.`;
+}
+
+function childTaskSpeech(){
+  const p = profiles[activeProfile] || profiles[0];
+  const current = getFirstPendingTask(activeProfile);
+  if(!current) return `${todayLongText()} ${dayGreetingText()} Todas as tarefas foram feitas. Muito bem!`;
+  const { step } = current;
+  const min = minutesUntilNextTask(activeProfile, step.id);
+  return `${todayLongText()} ${dayGreetingText()} Agora e hora de ${step.name}. ${step.tip || ''} Depois, a proxima tarefa sera em ${min} minuto${min === 1 ? '' : 's'}.`;
 }
 
 function completeChildTask(){
@@ -2131,6 +2158,21 @@ function previewSound(id){
   setTimeout(()=>{ try{ctx.close();}catch(e){} },2000);
 }
 
+function unlockAudio(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx = new Ctx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    g.gain.value = 0.001;
+    o.start();
+    o.stop(ctx.currentTime + 0.03);
+    setTimeout(()=>{ try{ctx.close();}catch(e){} },120);
+  }catch(e){}
+}
+
 function playAlarmSound(soundId){
   stopBeeps();
   const urgent = soundId === 'urgent';
@@ -2245,7 +2287,7 @@ function triggerRoutineStep(prof, step, profIdx, rId){
   document.getElementById('btnStop').textContent = 'JÁ FIZ';
   document.getElementById('btnStop').style.display = inChildMode ? 'none' : 'flex';
   const min = minutesUntilNextTask(profIdx, step.id);
-  const msg = `Alarme! ${todayLongText()}. ${prof.name}, agora é hora de ${step.name}. ${step.tip || ''} Vá fazer a tarefa. O botão Já fiz aparece em ${TASK_DONE_DELAY_MINUTES} minutos.`;
+  const msg = `Alarme! ${todayLongText()} ${dayGreetingText()} Agora e hora de ${step.name}. ${step.tip || ''} Va fazer a tarefa. O botao Ja fiz aparece em ${TASK_DONE_DELAY_MINUTES} minutos.`;
   speak(msg, 0.88, 800);
   speakIval = setInterval(()=>speak(msg, 0.88), 20000);
   if('Notification' in window && Notification.permission==='granted'){
@@ -2818,6 +2860,7 @@ function saveEditAlarm(){
 // PAGES
 // ================================================================
 function showPage(id){
+  unlockAudio();
   localStorage.setItem('lastPage', id);
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
