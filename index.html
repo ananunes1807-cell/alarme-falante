@@ -1528,14 +1528,37 @@ function alarmMatchesDate(a, now=new Date()){
 
 function getAlarmById(id){ return alarms.find(a => String(a.id) === String(id)); }
 
-function routineStepIsVisibleToday(step, now=new Date()){
-  if(!step.sourceAlarmId) return true;
-  const a = getAlarmById(step.sourceAlarmId);
-  return alarmMatchesDate(a, now);
+function alarmToRoutineStep(a){
+  return {
+    id: `alarm_step_${a.id}`,
+    sourceAlarmId: a.id,
+    emoji: a.isBirthday ? '🎂' : '⏰',
+    name: a.label || 'Alarme',
+    tip: `${repeatLabel(a)} · ${pad(a.hour)}:${pad(a.min)}`,
+    hour: a.hour,
+    min: a.min
+  };
+}
+
+function getRoutineSteps(profIdx, rId, options={}){
+  const todayOnly = !!options.todayOnly;
+  const now = options.now || new Date();
+  const manualSteps = getProfileRoutine(profIdx, rId).filter(step => !step.sourceAlarmId);
+  const alarmSteps = alarms
+    .filter(a => a.active)
+    .filter(a => (a.profileId||0) === profIdx)
+    .filter(a => (a.routineId || routineIdForHour(a.hour)) === rId)
+    .filter(a => !todayOnly || alarmMatchesDate(a, now))
+    .map(alarmToRoutineStep);
+  return [...manualSteps, ...alarmSteps].sort((a,b) => {
+    const at = a.hour == null ? 9999 : a.hour*60 + (a.min||0);
+    const bt = b.hour == null ? 9999 : b.hour*60 + (b.min||0);
+    return at - bt;
+  });
 }
 
 function getRoutineStepsForDay(profIdx, rId, now=new Date()){
-  return getProfileRoutine(profIdx, rId).filter(step => routineStepIsVisibleToday(step, now));
+  return getRoutineSteps(profIdx, rId, { todayOnly:true, now });
 }
 
 function removeRoutineStepForAlarm(alarmId){
@@ -1549,26 +1572,27 @@ function removeRoutineStepForAlarm(alarmId){
   });
 }
 
+function removeAllAlarmRoutineSteps(){
+  profiles.forEach((p, profIdx) => {
+    Object.keys(ROUTINE_META).forEach(rId => {
+      const steps = getProfileRoutine(profIdx, rId);
+      for(let i=steps.length-1;i>=0;i--){
+        if(steps[i].sourceAlarmId) steps.splice(i,1);
+      }
+    });
+  });
+}
+
 function syncAlarmToRoutine(alarm){
   if(!alarm) return;
   removeRoutineStepForAlarm(alarm.id);
   const rId = routineIdForHour(alarm.hour);
-  const steps = getProfileRoutine(alarm.profileId||0, rId);
-  const step = {
-    id: alarm.routineStepId || `alarm_step_${alarm.id}`,
-    sourceAlarmId: alarm.id,
-    emoji: alarm.isBirthday ? '🎂' : '⏰',
-    name: alarm.label || 'Alarme',
-    tip: `Tarefa marcada para ${pad(alarm.hour)}:${pad(alarm.min)}.`,
-    hour: alarm.hour,
-    min: alarm.min
-  };
-  steps.push(step);
   alarm.routineId = rId;
-  alarm.routineStepId = step.id;
+  alarm.routineStepId = `alarm_step_${alarm.id}`;
 }
 
 function syncAllAlarmsToRoutines(){
+  removeAllAlarmRoutineSteps();
   alarms.forEach(syncAlarmToRoutine);
   saveProfiles();
   saveAlarms();
@@ -1594,7 +1618,7 @@ function renderRoutine(){
   if(!p){ el.innerHTML='<div class="empty">Selecione um perfil acima.</div>'; return; }
 
   Object.values(ROUTINE_META).forEach(meta => {
-    const steps = getRoutineStepsForDay(activeProfile, meta.id);
+    const steps = getRoutineSteps(activeProfile, meta.id);
     const progress = getRoutineProgress(meta.id);
     const total = steps.length;
     const done = steps.filter(s => progress[s.id]).length;
@@ -1629,7 +1653,7 @@ function renderRoutine(){
           ? `<div class="empty" style="padding:12px">Nenhuma tarefa ainda.<br>Toque ✏️ para adicionar!</div>`
           : steps.map(s=>`
           <div class="step-item ${progress[s.id]?'done':''}" id="step-${meta.id}-${s.id}"
-            onclick="toggleStep('${meta.id}','${s.id}',this)">
+            onclick="${s.sourceAlarmId ? `openEditModal(${s.sourceAlarmId})` : `toggleStep('${meta.id}','${s.id}',this)`}">
             <div class="step-emoji">${s.emoji}</div>
             <div class="step-text">
               <div class="step-name">${s.name}</div>
@@ -1849,7 +1873,11 @@ function getActiveRoutineTask(){
   if(!activeRoutineAlarm) return null;
   const prof = profiles[activeRoutineAlarm.profIdx] || profiles[0];
   const steps = getProfileRoutineByIdx(activeRoutineAlarm.profIdx, activeRoutineAlarm.rId);
-  const step = steps.find(s => s.id === activeRoutineAlarm.stepId);
+  let step = steps.find(s => s.id === activeRoutineAlarm.stepId);
+  if(!step && activeRoutineAlarm.sourceAlarmId){
+    const alarm = getAlarmById(activeRoutineAlarm.sourceAlarmId);
+    if(alarm) step = alarmToRoutineStep(alarm);
+  }
   if(!prof || !step) return null;
   return { prof, rId: activeRoutineAlarm.rId, step };
 }
@@ -2066,12 +2094,10 @@ function checkAlarms(now){
       if(a.routineStepId){
         const profIdx = a.profileId || 0;
         const rId = a.routineId || routineIdForHour(a.hour);
-        const step = getProfileRoutine(profIdx, rId).find(s => s.id === a.routineStepId);
-        if(step){
-          markAlarmFired('routine', `${profIdx}_${rId}_${step.id}`, now);
-          triggerRoutineStep(profiles[profIdx] || profiles[0], step, profIdx, rId);
-          return;
-        }
+        const step = alarmToRoutineStep(a);
+        markAlarmFired('routine', `${profIdx}_${rId}_${step.id}`, now);
+        triggerRoutineStep(profiles[profIdx] || profiles[0], step, profIdx, rId);
+        return;
       }
       triggerAlarm(a);
       return;
@@ -2106,7 +2132,7 @@ function getProfileRoutineByIdx(profIdx, rId){
 function triggerRoutineStep(prof, step, profIdx, rId){
   if(activeAlarmId !== null) return;
   activeAlarmId = 'routine_'+step.id;
-  activeRoutineAlarm = { profIdx, rId, stepId: step.id };
+  activeRoutineAlarm = { profIdx, rId, stepId: step.id, sourceAlarmId: step.sourceAlarmId || null };
   const t = `${pad(step.hour)}:${pad(step.min)}`;
   const inChildMode = document.body.classList.contains('child-mode');
   playAlarmSound('urgent');
