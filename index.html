@@ -612,7 +612,19 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
   max-width: 620px;
   margin: 0 auto;
   display: grid;
-  gap: 14px;
+  gap: 10px;
+}
+.child-clock {
+  background: rgba(255,255,255,0.48);
+  border: 3px solid var(--green);
+  border-radius: 8px;
+  color: #00150c;
+  font-family: var(--ff);
+  font-size: clamp(2.5rem, 12vw, 4.8rem);
+  line-height: 1;
+  padding: 14px 16px;
+  text-align: center;
+  box-shadow: var(--shadow);
 }
 .child-top {
   display: flex;
@@ -627,6 +639,20 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
   font-family: var(--ff);
   color: var(--text);
   font-size: clamp(1.1rem, 5vw, 1.55rem);
+}
+.child-greeting {
+  display: grid;
+  gap: 2px;
+}
+.child-hello {
+  color: var(--green);
+  font-family: var(--ff);
+  font-size: clamp(1rem, 4vw, 1.35rem);
+}
+.child-note {
+  color: var(--green);
+  font-family: var(--ff);
+  font-size: clamp(0.92rem, 3.5vw, 1.15rem);
 }
 .child-avatar {
   width: 58px;
@@ -652,10 +678,21 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
 .child-card {
   background: var(--card);
   border: 2px solid var(--border);
-  border-radius: 30px;
-  padding: clamp(22px, 7vw, 42px);
+  border-radius: 8px;
+  padding: clamp(18px, 5vw, 28px);
   box-shadow: var(--shadowLg);
   text-align: center;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.child-card.alarming {
+  border-color: var(--red);
+  box-shadow: 0 0 0 6px rgba(224,85,85,0.16), 0 12px 34px rgba(224,85,85,0.22);
+  animation: childAlarmShake .42s linear infinite;
+}
+@keyframes childAlarmShake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
 }
 .child-kicker {
   color: var(--muted);
@@ -666,9 +703,9 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
   margin-bottom: 10px;
 }
 .child-emoji {
-  font-size: clamp(4.8rem, 24vw, 8.5rem);
+  font-size: clamp(4rem, 18vw, 7rem);
   line-height: 1;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .child-task {
   font-family: var(--ff);
@@ -687,20 +724,21 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
   background: rgba(76,175,125,0.12);
   color: var(--green);
   border: 2px solid rgba(76,175,125,0.24);
-  border-radius: 18px;
-  padding: 13px 14px;
+  border-radius: 8px;
+  padding: 11px 14px;
   font-family: var(--ff);
   font-size: clamp(1rem, 4.8vw, 1.35rem);
   text-align: center;
 }
 .child-actions {
   display: grid;
-  gap: 10px;
+  gap: 7px;
 }
+.child-actions.locked .child-done { display: none; }
 .child-done {
-  min-height: 88px;
+  min-height: 58px;
   border: 0;
-  border-radius: 28px;
+  border-radius: 8px;
   background: linear-gradient(135deg, var(--green), #26985c);
   color: #fff;
   font-family: var(--ff);
@@ -711,7 +749,7 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
 }
 .child-speak {
   border: 2px solid var(--border);
-  border-radius: 20px;
+  border-radius: 8px;
   background: var(--card);
   color: var(--accent);
   font-family: var(--ff);
@@ -719,6 +757,35 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
   padding: 16px;
   cursor: pointer;
 }
+.child-confirm {
+  display: none;
+  background: rgba(224,85,85,0.1);
+  border: 2px solid rgba(224,85,85,0.25);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+.child-confirm.show { display: grid; gap: 8px; }
+.child-confirm-title {
+  font-family: var(--ff);
+  color: var(--red);
+  font-size: 1.15rem;
+}
+.child-confirm-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.child-confirm button {
+  border: 0;
+  border-radius: 8px;
+  padding: 13px;
+  font-family: var(--ff);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.child-yes { background: var(--green); color: #fff; }
+.child-no { background: var(--card); color: var(--muted); border: 2px solid var(--border)!important; }
 .child-empty {
   font-family: var(--ff);
   font-size: clamp(1.6rem, 8vw, 3rem);
@@ -963,10 +1030,13 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
 <!-- ===== TELA DA CRIANCA ===== -->
 <div class="page child-page" id="page-child">
   <div class="child-shell">
+    <div class="child-clock" id="childClock">00:00:00</div>
     <div class="child-top">
       <div class="child-profile">
-        <div class="child-avatar" id="childAvatar"></div>
-        <div id="childName">Criança</div>
+        <div class="child-greeting">
+          <div class="child-hello" id="childHello">Olá!</div>
+          <div class="child-note">Sua mãe deixou essa tarefa para você.</div>
+        </div>
       </div>
       <button class="child-exit" onclick="exitChildMode()">Modo mãe</button>
     </div>
@@ -977,9 +1047,16 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
       <div class="child-tip" id="childTaskTip"></div>
     </div>
     <div class="child-next" id="childNextText">Próxima tarefa em 10 minutos.</div>
-    <div class="child-actions">
+    <div class="child-actions locked" id="childActions">
       <button class="child-done" onclick="completeChildTask()">Já fiz</button>
       <button class="child-speak" onclick="speakChildTask()">Falar de novo</button>
+    </div>
+    <div class="child-confirm" id="childConfirm">
+      <div class="child-confirm-title">Você fez mesmo?</div>
+      <div class="child-confirm-row">
+        <button class="child-yes" onclick="confirmChildDone(true)">Sim, fiz</button>
+        <button class="child-no" onclick="confirmChildDone(false)">Ainda não</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1275,6 +1352,8 @@ function tick(){
   const n=new Date();
   const H=n.getHours(), M=n.getMinutes(), S=n.getSeconds();
   document.getElementById('headerTime').textContent=`${pad(H)}:${pad(M)}`;
+  const childClock = document.getElementById('childClock');
+  if(childClock) childClock.textContent = `${pad(H)}:${pad(M)}:${pad(S)}`;
   document.getElementById('headerDate').textContent=`${DAYS[n.getDay()]}, ${n.getDate()} de ${MONTHS[n.getMonth()]}`;
   // greeting
   let gr = H<12?'Bom dia! 🌞': H<18?'Boa tarde! 🌤️':'Boa noite! 🌙';
@@ -1702,6 +1781,15 @@ function getFirstPendingTask(profIdx=activeProfile){
   return null;
 }
 
+function getActiveRoutineTask(){
+  if(!activeRoutineAlarm) return null;
+  const prof = profiles[activeRoutineAlarm.profIdx] || profiles[0];
+  const steps = getProfileRoutineByIdx(activeRoutineAlarm.profIdx, activeRoutineAlarm.rId);
+  const step = steps.find(s => s.id === activeRoutineAlarm.stepId);
+  if(!prof || !step) return null;
+  return { prof, rId: activeRoutineAlarm.rId, step };
+}
+
 function minutesUntilNextTask(profIdx=activeProfile, currentStepId=null){
   const now = new Date();
   const nowMin = now.getHours()*60 + now.getMinutes();
@@ -1719,9 +1807,14 @@ function minutesUntilNextTask(profIdx=activeProfile, currentStepId=null){
 
 function renderChildMode(){
   const p = profiles[activeProfile] || profiles[0];
-  const current = getFirstPendingTask(activeProfile);
-  document.getElementById('childAvatar').textContent = p.avatar;
-  document.getElementById('childName').textContent = p.name;
+  const active = getActiveRoutineTask();
+  const current = active ? { rId: active.rId, step: active.step } : getFirstPendingTask(activeProfile);
+  const childHello = document.getElementById('childHello');
+  if(childHello) childHello.textContent = `Olá ${active ? active.prof.name : p.name}`;
+  const isAlarm = !!active;
+  document.getElementById('childActions')?.classList.toggle('locked', !isAlarm);
+  document.getElementById('childTaskCard')?.classList.toggle('alarming', isAlarm);
+  document.getElementById('childConfirm')?.classList.remove('show');
 
   if(!current){
     document.getElementById('childRoutineName').textContent = 'Tudo pronto';
@@ -1733,12 +1826,14 @@ function renderChildMode(){
   }
 
   const { rId, step } = current;
-  const min = minutesUntilNextTask(activeProfile, step.id);
-  document.getElementById('childRoutineName').textContent = ROUTINE_META[rId].title;
+  const min = minutesUntilNextTask(active ? activeRoutineAlarm.profIdx : activeProfile, step.id);
+  document.getElementById('childRoutineName').textContent = isAlarm ? 'Alarme tocando' : ROUTINE_META[rId].title;
   document.getElementById('childTaskEmoji').textContent = step.emoji || '⭐';
   document.getElementById('childTaskName').textContent = step.name;
   document.getElementById('childTaskTip').textContent = step.tip || 'Você consegue!';
-  document.getElementById('childNextText').textContent = `Próxima tarefa em ${min} minuto${min === 1 ? '' : 's'}.`;
+  document.getElementById('childNextText').textContent = isAlarm
+    ? 'Aperte Já fiz somente quando terminar.'
+    : `Próxima tarefa em ${min} minuto${min === 1 ? '' : 's'}.`;
 }
 
 function childTaskSpeech(){
@@ -1755,6 +1850,11 @@ function speakChildTask(){
 }
 
 function completeChildTask(){
+  if(activeRoutineAlarm){
+    document.getElementById('childConfirm')?.classList.add('show');
+    speak('Você fez mesmo? Aperte sim se já terminou. Se ainda não terminou, aperte ainda não.', 0.9);
+    return;
+  }
   const current = getFirstPendingTask(activeProfile);
   const p = profiles[activeProfile] || profiles[0];
   if(!current){
@@ -1768,6 +1868,16 @@ function completeChildTask(){
   renderChildMode();
   burst();
   speak(`Muito bem, ${p.name}! Você fez ${current.step.name}.`, 0.9);
+}
+
+function confirmChildDone(done){
+  document.getElementById('childConfirm')?.classList.remove('show');
+  if(done){
+    stopAlarm();
+    return;
+  }
+  speak('Tudo bem. Termine a tarefa. O alarme vai continuar tocando.', 0.9);
+  speakChildTask();
 }
 
 function exitChildMode(){
@@ -1837,23 +1947,24 @@ function previewSound(id){
 
 function playAlarmSound(soundId){
   stopBeeps();
-  const s=SOUNDS.find(x=>x.id===soundId)||SOUNDS[0];
+  const urgent = soundId === 'urgent';
+  const s=urgent ? { id:'urgent', freq:[880,1175,988,1319,740,1568] } : (SOUNDS.find(x=>x.id===soundId)||SOUNDS[0]);
   const doBeep=()=>{
     audioCtx=new(window.AudioContext||window.webkitAudioContext)();
     const t=audioCtx.currentTime;
     s.freq.forEach((f,i)=>{
       const o=audioCtx.createOscillator(), g=audioCtx.createGain();
       o.connect(g); g.connect(audioCtx.destination);
-      o.type='sine'; o.frequency.value=f;
-      const delay=i*.18;
+      o.type=urgent?'square':'sine'; o.frequency.value=f;
+      const delay=i*(urgent ? .09 : .18);
       g.gain.setValueAtTime(0,t+delay);
-      g.gain.linearRampToValueAtTime(.35,t+delay+.05);
-      g.gain.linearRampToValueAtTime(0,t+delay+.3);
-      o.start(t+delay); o.stop(t+delay+.35);
+      g.gain.linearRampToValueAtTime(urgent ? .55 : .35,t+delay+.03);
+      g.gain.linearRampToValueAtTime(0,t+delay+(urgent ? .16 : .3));
+      o.start(t+delay); o.stop(t+delay+(urgent ? .2 : .35));
     });
   };
   doBeep();
-  beepIval=setInterval(doBeep, s.freq.length*200+800);
+  beepIval=setInterval(doBeep, urgent ? 760 : s.freq.length*200+800);
 }
 
 function stopBeeps(){
@@ -1925,20 +2036,24 @@ function triggerRoutineStep(prof, step, profIdx, rId){
   activeAlarmId = 'routine_'+step.id;
   activeRoutineAlarm = { profIdx, rId, stepId: step.id };
   const t = `${pad(step.hour)}:${pad(step.min)}`;
-  document.getElementById('ovProfile').textContent = prof.avatar;
-  document.getElementById('ovBell').textContent    = step.emoji;
-  document.getElementById('ovTime').textContent    = t;
-  document.getElementById('ovLabel').textContent   = `${prof.name} — ${step.name}`;
-  document.getElementById('overlay').classList.add('on');
-  document.body.style.overflow = 'hidden';
-  playAlarmSound('gentle');
+  const inChildMode = document.body.classList.contains('child-mode');
+  playAlarmSound('urgent');
+  renderChildMode();
+  if(!inChildMode){
+    document.getElementById('ovProfile').textContent = prof.avatar;
+    document.getElementById('ovBell').textContent    = step.emoji;
+    document.getElementById('ovTime').textContent    = t;
+    document.getElementById('ovLabel').textContent   = `${prof.name} — ${step.name}`;
+    document.getElementById('overlay').classList.add('on');
+    document.body.style.overflow = 'hidden';
+  }
   document.getElementById('balloonGame').classList.remove('show');
   document.getElementById('btnStop').textContent = 'JÁ FIZ';
-  document.getElementById('btnStop').style.display = 'flex';
+  document.getElementById('btnStop').style.display = inChildMode ? 'none' : 'flex';
   const min = minutesUntilNextTask(profIdx, step.id);
   const msg = `Alarme! ${prof.name}, agora é hora de ${step.name}. ${step.tip || ''} Próxima tarefa em ${min} minuto${min === 1 ? '' : 's'}.`;
   speak(msg, 0.85, 800);
-  speakIval = setInterval(()=>speak(msg, 0.85), 10000);
+  speakIval = setInterval(()=>speak(msg, 0.85), 7000);
   if('Notification' in window && Notification.permission==='granted'){
     new Notification(`${step.emoji} ${prof.name} — ${step.name}`, { body: `São ${t}`, icon:'./icon-192.png', requireInteraction:true });
   }
@@ -2025,10 +2140,11 @@ function stopAlarm(){
     activeProfile = oldProfile;
     renderRoutine();
     renderQuickRoutine();
-    renderChildMode();
   }
   activeAlarmId=null;
   activeRoutineAlarm=null;
+  document.getElementById('childConfirm')?.classList.remove('show');
+  renderChildMode();
   burst();
   const profileIndex = profiles.indexOf(p);
   addStar(profileIndex >= 0 ? profileIndex : 0,1);
