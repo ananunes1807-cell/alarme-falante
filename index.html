@@ -2537,7 +2537,18 @@ checkAlarms(new Date());
 if(new URLSearchParams(location.search).get('modo') === 'crianca' || location.hash === '#crianca'){
   showPage('child');
 }
-if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    reg.update().catch(()=>{});
+    if(reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing;
+      if(sw) sw.addEventListener('statechange', () => {
+        if(sw.state === 'installed' && navigator.serviceWorker.controller) location.reload();
+      });
+    });
+  }).catch(()=>{});
+}
 if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
 </script>
 </body>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alarme-falante-v4';
+const CACHE_NAME = 'alarme-falante-v5';
 const FILES = [
   './index.html',
   './manifest.json',
@@ -34,6 +34,11 @@ self.addEventListener('fetch', e => {
 
 // Notificações agendadas (recebe mensagem do app)
 self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
+
   if (e.data && e.data.type === 'SCHEDULE_ALARM') {
     const { id, label, time, delay } = e.data;
     setTimeout(() => {
