@@ -735,6 +735,21 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
   gap: 7px;
 }
 .child-actions.locked .child-done { display: none; }
+.child-actions.locked .child-speak {
+  background: rgba(76,175,125,0.08);
+  border-color: rgba(76,175,125,0.24);
+}
+.child-wait {
+  display: none;
+  background: rgba(245,200,66,0.16);
+  border: 2px solid rgba(245,200,66,0.32);
+  color: #8a6500;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  font-family: var(--ff);
+}
+.child-wait.show { display: block; }
 .child-done {
   min-height: 58px;
   border: 0;
@@ -1051,6 +1066,7 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
       <button class="child-done" onclick="completeChildTask()">Já fiz</button>
       <button class="child-speak" onclick="speakChildTask()">Falar de novo</button>
     </div>
+    <div class="child-wait" id="childWait">Vá fazer a tarefa. O botão aparece daqui a 10 minutos.</div>
     <div class="child-confirm" id="childConfirm">
       <div class="child-confirm-title">Você fez mesmo?</div>
       <div class="child-confirm-row">
@@ -1307,7 +1323,9 @@ let annTimer      = null;
 let selectedAlarmProfile = 0;
 let activeRoutineAlarm = null;
 const ALARM_GRACE_MINUTES = 5;
+const TASK_DONE_DELAY_MINUTES = 10;
 let appReadyForAlarms = false;
+let taskDoneUnlockTimer = null;
 
 // ================================================================
 // VOICES
@@ -1904,7 +1922,9 @@ function renderChildMode(){
   const childHello = document.getElementById('childHello');
   if(childHello) childHello.textContent = `Olá ${active ? active.prof.name : p.name}`;
   const isAlarm = !!active;
-  document.getElementById('childActions')?.classList.toggle('locked', !isAlarm);
+  const canFinish = isAlarm && !!activeRoutineAlarm.canFinish;
+  document.getElementById('childActions')?.classList.toggle('locked', !canFinish);
+  document.getElementById('childWait')?.classList.toggle('show', isAlarm && !canFinish);
   document.getElementById('childTaskCard')?.classList.toggle('alarming', isAlarm);
   document.getElementById('childConfirm')?.classList.remove('show');
 
@@ -1924,7 +1944,7 @@ function renderChildMode(){
   document.getElementById('childTaskName').textContent = step.name;
   document.getElementById('childTaskTip').textContent = step.tip || 'Você consegue!';
   document.getElementById('childNextText').textContent = isAlarm
-    ? 'Aperte Já fiz somente quando terminar.'
+    ? (canFinish ? 'Agora você pode confirmar que terminou.' : `Vá fazer a tarefa. O botão aparece em ${TASK_DONE_DELAY_MINUTES} minutos.`)
     : `Próxima tarefa em ${min} minuto${min === 1 ? '' : 's'}.`;
 }
 
@@ -1943,6 +1963,10 @@ function speakChildTask(){
 
 function completeChildTask(){
   if(activeRoutineAlarm){
+    if(!activeRoutineAlarm.canFinish){
+      speak(`Primeiro faça a tarefa. O botão Já fiz aparece depois de ${TASK_DONE_DELAY_MINUTES} minutos.`, 0.88);
+      return;
+    }
     document.getElementById('childConfirm')?.classList.add('show');
     speak('Você fez mesmo? Aperte sim se já terminou. Se ainda não terminou, aperte ainda não.', 0.9);
     return;
@@ -1970,6 +1994,13 @@ function confirmChildDone(done){
   }
   speak('Tudo bem. Termine a tarefa. O alarme vai continuar tocando.', 0.9);
   speakChildTask();
+}
+
+function unlockRoutineDoneButton(){
+  if(!activeRoutineAlarm) return;
+  activeRoutineAlarm.canFinish = true;
+  renderChildMode();
+  speak('Agora, se você já terminou, pode apertar Já fiz.', 0.9);
 }
 
 function exitChildMode(){
@@ -2040,23 +2071,23 @@ function previewSound(id){
 function playAlarmSound(soundId){
   stopBeeps();
   const urgent = soundId === 'urgent';
-  const s=urgent ? { id:'urgent', freq:[880,1175,988,1319,740,1568] } : (SOUNDS.find(x=>x.id===soundId)||SOUNDS[0]);
+  const s=urgent ? { id:'urgent', freq:[523,659,784,659] } : (SOUNDS.find(x=>x.id===soundId)||SOUNDS[0]);
   const doBeep=()=>{
     audioCtx=new(window.AudioContext||window.webkitAudioContext)();
     const t=audioCtx.currentTime;
     s.freq.forEach((f,i)=>{
       const o=audioCtx.createOscillator(), g=audioCtx.createGain();
       o.connect(g); g.connect(audioCtx.destination);
-      o.type=urgent?'square':'sine'; o.frequency.value=f;
-      const delay=i*(urgent ? .09 : .18);
+      o.type=urgent?'triangle':'sine'; o.frequency.value=f;
+      const delay=i*(urgent ? .22 : .18);
       g.gain.setValueAtTime(0,t+delay);
-      g.gain.linearRampToValueAtTime(urgent ? .55 : .35,t+delay+.03);
-      g.gain.linearRampToValueAtTime(0,t+delay+(urgent ? .16 : .3));
-      o.start(t+delay); o.stop(t+delay+(urgent ? .2 : .35));
+      g.gain.linearRampToValueAtTime(urgent ? .13 : .35,t+delay+.05);
+      g.gain.linearRampToValueAtTime(0,t+delay+(urgent ? .38 : .3));
+      o.start(t+delay); o.stop(t+delay+(urgent ? .45 : .35));
     });
   };
   doBeep();
-  beepIval=setInterval(doBeep, urgent ? 760 : s.freq.length*200+800);
+  beepIval=setInterval(doBeep, urgent ? 2400 : s.freq.length*200+800);
 }
 
 function stopBeeps(){
@@ -2132,9 +2163,11 @@ function getProfileRoutineByIdx(profIdx, rId){
 function triggerRoutineStep(prof, step, profIdx, rId){
   if(activeAlarmId !== null) return;
   activeAlarmId = 'routine_'+step.id;
-  activeRoutineAlarm = { profIdx, rId, stepId: step.id, sourceAlarmId: step.sourceAlarmId || null };
+  activeRoutineAlarm = { profIdx, rId, stepId: step.id, sourceAlarmId: step.sourceAlarmId || null, canFinish:false };
   const t = `${pad(step.hour)}:${pad(step.min)}`;
   const inChildMode = document.body.classList.contains('child-mode');
+  if(taskDoneUnlockTimer){ clearTimeout(taskDoneUnlockTimer); taskDoneUnlockTimer=null; }
+  taskDoneUnlockTimer = setTimeout(unlockRoutineDoneButton, TASK_DONE_DELAY_MINUTES * 60 * 1000);
   playAlarmSound('urgent');
   renderChildMode();
   if(!inChildMode){
@@ -2149,9 +2182,9 @@ function triggerRoutineStep(prof, step, profIdx, rId){
   document.getElementById('btnStop').textContent = 'JÁ FIZ';
   document.getElementById('btnStop').style.display = inChildMode ? 'none' : 'flex';
   const min = minutesUntilNextTask(profIdx, step.id);
-  const msg = `Alarme! ${prof.name}, agora é hora de ${step.name}. ${step.tip || ''} Próxima tarefa em ${min} minuto${min === 1 ? '' : 's'}.`;
-  speak(msg, 0.85, 800);
-  speakIval = setInterval(()=>speak(msg, 0.85), 7000);
+  const msg = `Alarme! ${prof.name}, agora é hora de ${step.name}. ${step.tip || ''} Vá fazer a tarefa. O botão Já fiz aparece em ${TASK_DONE_DELAY_MINUTES} minutos.`;
+  speak(msg, 0.88, 800);
+  speakIval = setInterval(()=>speak(msg, 0.88), 20000);
   if('Notification' in window && Notification.permission==='granted'){
     new Notification(`${step.emoji} ${prof.name} — ${step.name}`, { body: `São ${t}`, icon:'./icon-192.png', requireInteraction:true });
   }
@@ -2225,6 +2258,7 @@ function popBalloon(el){
 function stopAlarm(){
   stopBeeps(); speechSynthesis.cancel();
   if(speakIval){clearInterval(speakIval);speakIval=null;}
+  if(taskDoneUnlockTimer){clearTimeout(taskDoneUnlockTimer);taskDoneUnlockTimer=null;}
   document.getElementById('overlay').classList.remove('on');
   document.getElementById('balloonGame').classList.remove('show');
   document.body.style.overflow='';
