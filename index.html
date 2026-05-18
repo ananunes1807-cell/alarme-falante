@@ -1071,6 +1071,15 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
     <div class="day-detail-title" id="dayDetailTitle"></div>
     <div id="dayDetailList"></div>
   </div>
+  <div class="card">
+    <div class="sec-title" style="margin-bottom:8px">Levar agenda para outro PC</div>
+    <div style="font-size:.82rem;font-weight:800;color:var(--muted);line-height:1.35;margin-bottom:12px">
+      Exporte aqui e importe no computador das crianças para copiar alarmes, rotinas, perfis e tema.
+    </div>
+    <button class="btn-big" onclick="exportAppData()" style="font-size:1rem;padding:12px;margin-bottom:10px">Exportar agenda</button>
+    <input type="file" id="importDataFile" accept="application/json,.json" class="hidden" onchange="importAppData(this.files[0])">
+    <button class="reset-routine-btn" onclick="document.getElementById('importDataFile').click()">Importar agenda</button>
+  </div>
 </div>
 
 <!-- ===== PERFIL ===== -->
@@ -1111,6 +1120,7 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
       <button class="child-done" onclick="completeChildTask()">Já fiz</button>
       <button class="child-silence" onclick="silenceRoutineAlarm()">Silenciar agora</button>
       <button class="child-speak" onclick="speakChildTask()">Falar de novo</button>
+      <button class="child-speak" onclick="speakChildTime()">Falar hora</button>
     </div>
     <div class="child-wait" id="childWait">Vá fazer a tarefa. O botão aparece daqui a 3 minutos.</div>
     <div class="child-confirm" id="childConfirm">
@@ -2064,6 +2074,11 @@ function speakChildTask(){
   speak(childTaskSpeech(), 0.86);
 }
 
+function speakChildTime(){
+  const n = new Date();
+  speak(`${todayLongText()} ${makeTimeSpeech(n.getHours(), n.getMinutes())}`, 0.86);
+}
+
 function childTaskSpeech(){
   const p = profiles[activeProfile] || profiles[0];
   const current = getFirstPendingTask(activeProfile);
@@ -2966,6 +2981,71 @@ function saveEditAlarm(){
   closeEditModal();
   speak(`Alarme atualizado para as ${pad(a.hour)} e ${pad(a.min)} e sincronizado com a rotina!`);
   floatE(null,'✅');
+}
+
+// ================================================================
+// EXPORT / IMPORT AGENDA
+// ================================================================
+function exportAppData(){
+  const data = {
+    app: 'alarme-falante',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    profiles,
+    alarms,
+    activeProfile,
+    appTheme: currentTheme,
+    annActive,
+    annInterval,
+    lastPage: localStorage.getItem('lastPage') || 'home'
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date();
+  a.href = url;
+  a.download = `agenda-alarme-falante-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  speak('Agenda exportada. Agora voce pode importar esse arquivo no outro computador.', 0.9);
+}
+
+function clearImportedProgress(){
+  Object.keys(localStorage).forEach(k => {
+    if(k === 'routineState' || k.startsWith('routine_') || k.startsWith('routine_complete_') || k.startsWith('alarm_fired_')){
+      localStorage.removeItem(k);
+    }
+  });
+}
+
+function importAppData(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.app !== 'alarme-falante' || !Array.isArray(data.profiles) || !Array.isArray(data.alarms)){
+        speak('Esse arquivo nao parece ser uma agenda do Alarme Falante.', 0.9);
+        return;
+      }
+      if(!confirm('Importar esta agenda vai substituir os alarmes, rotinas, perfis e tema deste aparelho. Pode importar?')) return;
+      clearImportedProgress();
+      localStorage.setItem('profiles', JSON.stringify(data.profiles));
+      localStorage.setItem('alarmsV4', JSON.stringify(data.alarms));
+      localStorage.setItem('activeProfile', String(data.activeProfile || 0));
+      localStorage.setItem('appTheme', data.appTheme || 'default');
+      localStorage.setItem('annActive', JSON.stringify(!!data.annActive));
+      localStorage.setItem('annInterval', String(data.annInterval || 60));
+      localStorage.setItem('lastPage', data.lastPage || 'child');
+      speak('Agenda importada. Vou atualizar o app agora.', 0.9);
+      setTimeout(()=>location.reload(), 800);
+    }catch(e){
+      speak('Nao consegui importar esse arquivo.', 0.9);
+    }
+  };
+  reader.readAsText(file);
 }
 
 // ================================================================

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alarme-falante-v15';
+const CACHE_NAME = 'alarme-falante-v16';
 const FILES = [
   './index.html',
   './manifest.json',
