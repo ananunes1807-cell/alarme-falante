@@ -338,6 +338,15 @@ body.child-mode .nav { display: none; }
 }
 .sound-pill.active { background: var(--purple); border-color: var(--purple); color: #fff; }
 .sound-pill:active { transform: scale(.93); }
+.emoji-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.emoji-pill {
+  width: 40px; height: 40px; border-radius: 13px;
+  background: var(--bg); border: 2px solid var(--border);
+  font-size: 1.35rem; cursor: pointer; transition: all .18s;
+  display: flex; align-items: center; justify-content: center;
+}
+.emoji-pill.active { background: rgba(74,144,184,0.14); border-color: var(--accent); transform: translateY(-1px); }
+.emoji-pill:active { transform: scale(.92); }
 
 /* ALARM LIST */
 .alarm-item {
@@ -349,6 +358,7 @@ body.child-mode .nav { display: none; }
 }
 @keyframes slideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 .alarm-item.off { opacity: .4; }
+.alarm-emoji { font-size: 2rem; line-height: 1; flex-shrink: 0; width: 40px; text-align: center; }
 .a-left { flex: 1; min-width: 0; }
 .a-time { font-family: var(--ff); font-size: 2rem; color: var(--accent); line-height: 1; }
 .alarm-item.off .a-time { color: var(--muted); }
@@ -968,6 +978,8 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
       </div>
     </div>
     <input class="field" type="text" id="nLabel" placeholder="Nome (ex: Escola 🎒)" maxlength="32">
+    <div class="field-label">Emoji da tarefa</div>
+    <div class="emoji-pills" id="alarmEmojiPills"></div>
     <div class="field-label">Repetir</div>
     <div class="rmodes">
       <button class="rmode active" data-mode="once"     onclick="setMode('once')">📅 Uma vez</button>
@@ -1118,6 +1130,8 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
       </div>
     </div>
     <input class="field" type="text" id="eLabel" placeholder="Nome do alarme" maxlength="32">
+    <div class="field-label">Emoji da tarefa</div>
+    <div class="emoji-pills" id="editAlarmEmojiPills"></div>
     <!-- REPEAT MODE -->
     <div class="field-label">Repetir</div>
     <div class="rmodes" style="margin-bottom:12px">
@@ -1342,11 +1356,13 @@ let annActive     = JSON.parse(localStorage.getItem('annActive')   || 'false');
 let annInterval   = parseInt(localStorage.getItem('annInterval')   || '60');
 let annTimer      = null;
 let selectedAlarmProfile = 0;
+let selectedAlarmEmoji = '⏰';
 let activeRoutineAlarm = null;
 const ALARM_GRACE_MINUTES = 5;
 const TASK_DONE_DELAY_MINUTES = 3;
 let appReadyForAlarms = false;
 let taskDoneUnlockTimer = null;
+let selEditAlarmEmoji = '⏰';
 
 // ================================================================
 // VOICES
@@ -1563,6 +1579,24 @@ const ROUTINE_META = {
 
 // Emoji palette for step picker
 const STEP_EMOJIS = ['😴','🚿','🦷','👕','🍳','🎒','🍽️','😌','📚','🍎','🛁','🎮','🍜','🩳','📖','☕','🏃','🧘','💊','📱','🎵','🐕','🌿','🧹','💼','🚗','🛒','💪','🎨','📝'];
+const ALARM_EMOJIS = ['⏰','💊','🍎','🍽️','🚿','🦷','👕','🎒','📚','🎮','😴','🛁','🍜','📖','⭐','🎂'];
+
+function getAlarmEmoji(a){
+  if(!a) return '⏰';
+  if(a.isBirthday) return '🎂';
+  return a.emoji || '⏰';
+}
+
+function renderEmojiPills(targetId, selected, onPick){
+  const el = document.getElementById(targetId);
+  if(!el) return;
+  el.innerHTML = ALARM_EMOJIS.map(e =>
+    `<button class="emoji-pill ${e===selected?'active':''}" type="button" onclick="${onPick}('${e}')">${e}</button>`
+  ).join('');
+}
+
+function setAlarmEmoji(e){ selectedAlarmEmoji = e; renderEmojiPills('alarmEmojiPills', selectedAlarmEmoji, 'setAlarmEmoji'); }
+function setEditAlarmEmoji(e){ selEditAlarmEmoji = e; renderEmojiPills('editAlarmEmojiPills', selEditAlarmEmoji, 'setEditAlarmEmoji'); }
 
 function getProfileRoutine(profIdx, rId){
   const p = profiles[profIdx];
@@ -1594,7 +1628,7 @@ function alarmToRoutineStep(a){
   return {
     id: `alarm_step_${a.id}`,
     sourceAlarmId: a.id,
-    emoji: a.isBirthday ? '🎂' : '⏰',
+    emoji: getAlarmEmoji(a),
     name: a.label || 'Alarme',
     tip: `${repeatLabel(a)} · ${pad(a.hour)}:${pad(a.min)}`,
     hour: a.hour,
@@ -2400,7 +2434,7 @@ function addAlarm(){
   const M=parseInt(document.getElementById('nMin').value);
   const label=document.getElementById('nLabel').value.trim();
   const isBirthday=document.getElementById('isBirthday').checked;
-  let alarm={id:Date.now(),hour:H,min:M,label,active:true,mode:selectedMode,sound:selSound,isBirthday,profileId:selectedAlarmProfile};
+  let alarm={id:Date.now(),hour:H,min:M,label,emoji:selectedAlarmEmoji,active:true,mode:selectedMode,sound:selSound,isBirthday,profileId:selectedAlarmProfile};
   if(selectedMode==='weekdays'){
     if(selectedWDs.size===0){speak('Selecione pelo menos um dia!');return;}
     alarm.mode='weekdays_custom'; alarm.days=[...selectedWDs];
@@ -2441,10 +2475,12 @@ function renderAlarms(){
   el.innerHTML=alarms.map(a=>{
     const p=profiles[a.profileId||0]||profiles[0];
     const snd=SOUNDS.find(s=>s.id===a.sound)||SOUNDS[0];
+    const emoji=getAlarmEmoji(a);
     return `<div class="alarm-item ${a.active?'':'off'}">
+      <div class="alarm-emoji">${emoji}</div>
       <div class="a-left">
         <div class="a-time">${pad(a.hour)}:${pad(a.min)}</div>
-        <div class="a-label">${a.isBirthday?'🎂 ':''} ${a.label||'Alarme'} · ${p.avatar} ${p.name}</div>
+        <div class="a-label">${emoji} ${a.label||'Alarme'} · ${p.avatar} ${p.name}</div>
         <div class="a-repeat">${repeatLabel(a)}</div>
         <div class="a-sound">${snd.label} · vai para ${ROUTINE_META[a.routineId||routineIdForHour(a.hour)]?.title||'rotina'}</div>
       </div>
@@ -2570,7 +2606,7 @@ function showDay(d){
     return `<div class="day-alarm-item">
       <div>
         <div class="day-alarm-time">${pad(a.hour)}:${pad(a.min)}</div>
-        <div class="day-alarm-label">${a.isBirthday?'🎂 ':''} ${a.label||'Alarme'} · ${p.avatar} ${p.name}</div>
+        <div class="day-alarm-label">${getAlarmEmoji(a)} ${a.label||'Alarme'} · ${p.avatar} ${p.name}</div>
         <div class="day-alarm-repeat">${repeatLabel(a)}</div>
       </div>
     </div>`;
@@ -2764,6 +2800,7 @@ function openEditModal(id){
   editingAlarmId = id;
   selEditSound   = a.sound || 'gentle';
   selEditProfile = a.profileId || 0;
+  selEditAlarmEmoji = getAlarmEmoji(a);
   selEditMode    = a.mode || 'once';
   selEditWDs     = new Set(a.days || []);
   selEditWeekDay = a.weekDay !== undefined ? a.weekDay : -1;
@@ -2792,6 +2829,7 @@ function openEditModal(id){
 
   renderEditSoundPills();
   renderEditProfileBtns();
+  renderEmojiPills('editAlarmEmojiPills', selEditAlarmEmoji, 'setEditAlarmEmoji');
 
   // weekday buttons
   document.querySelectorAll('#eWdPicker .wd').forEach(b => {
@@ -2827,6 +2865,7 @@ function saveEditAlarm(){
   a.hour  = parseInt(document.getElementById('eHour').value);
   a.min   = parseInt(document.getElementById('eMin').value);
   a.label = document.getElementById('eLabel').value.trim();
+  a.emoji = selEditAlarmEmoji;
   a.sound = selEditSound;
   a.profileId   = selEditProfile;
   a.isBirthday  = document.getElementById('eIsBirthday').checked;
@@ -2892,6 +2931,7 @@ renderAlarms();
 renderCalendar();
 renderSoundPills();
 renderAlarmProfileBtns();
+renderEmojiPills('alarmEmojiPills', selectedAlarmEmoji, 'setAlarmEmoji');
 initAnn();
 loadWeather();
 applyTheme(currentTheme);
