@@ -1026,6 +1026,19 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
     <!-- SOUND PICKER -->
     <div class="field-label">Som do alarme 🎵</div>
     <div class="sound-pills" id="soundPills"></div>
+    <div class="field-label">Soneca da rotina</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <label class="toggle">
+        <input type="checkbox" id="nSnooze">
+        <span class="tslider"></span>
+      </label>
+      <span style="font-family:var(--ff);font-size:1rem;color:var(--text)">Repetir ate apertar Ja fiz</span>
+      <select id="nSnoozeMin" class="field" style="margin:0;max-width:130px">
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+      </select>
+    </div>
     <!-- BIRTHDAY toggle -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
       <label class="toggle">
@@ -1185,6 +1198,16 @@ body.theme-bruxa    { --bg:#0d0318;--surface:#160525;--card:#1e0830;--border:rgb
     <!-- SOUND -->
     <div class="field-label">Som 🎵</div>
     <div class="sound-pills" id="editSoundPills"></div>
+    <div class="field-label">Soneca da rotina</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <label class="toggle"><input type="checkbox" id="eSnooze"><span class="tslider"></span></label>
+      <span style="font-family:var(--ff);font-size:1rem;color:var(--text)">Repetir ate apertar Ja fiz</span>
+      <select id="eSnoozeMin" class="field" style="margin:0;max-width:130px">
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+      </select>
+    </div>
     <!-- BIRTHDAY -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
       <label class="toggle"><input type="checkbox" id="eIsBirthday"><span class="tslider"></span></label>
@@ -1363,6 +1386,7 @@ const TASK_DONE_DELAY_MINUTES = 3;
 let appReadyForAlarms = false;
 let taskDoneUnlockTimer = null;
 let selEditAlarmEmoji = '⏰';
+let routineSnoozeTimer = null;
 
 // ================================================================
 // VOICES
@@ -2051,6 +2075,10 @@ function childTaskSpeech(){
 
 function childTaskSpeech(){
   const p = profiles[activeProfile] || profiles[0];
+  const active = getActiveRoutineTask();
+  if(active){
+    return routineAlarmSpeech(active.prof, active.step);
+  }
   const current = getFirstPendingTask(activeProfile);
   if(!current) return `${todayLongText()} ${dayGreetingText()} Todas as tarefas foram feitas. Muito bem!`;
   const { step } = current;
@@ -2097,7 +2125,9 @@ function silenceRoutineAlarm(){
   if(!activeRoutineAlarm) return;
   stopBeeps();
   speechSynthesis.cancel();
+  if(speakIval){clearInterval(speakIval);speakIval=null;}
   activeRoutineAlarm.silenced = true;
+  scheduleRoutineSnooze();
   renderChildMode();
   speak('Som desligado. FaÃ§a a tarefa. Depois volte para apertar JÃ¡ fiz.', 0.9);
 }
@@ -2299,10 +2329,46 @@ function getProfileRoutineByIdx(profIdx, rId){
   return p.routine[rId];
 }
 
+function routineAlarmSpeech(prof, step){
+  return `Alarme. ${todayLongText()} ${dayGreetingText()} Agora e hora de ${step.name}.`;
+}
+
+function getActiveRoutineSourceAlarm(){
+  if(!activeRoutineAlarm || !activeRoutineAlarm.sourceAlarmId) return null;
+  return getAlarmById(activeRoutineAlarm.sourceAlarmId);
+}
+
+function clearRoutineSnooze(){
+  if(routineSnoozeTimer){ clearTimeout(routineSnoozeTimer); routineSnoozeTimer=null; }
+}
+
+function scheduleRoutineSnooze(){
+  clearRoutineSnooze();
+  const alarm = getActiveRoutineSourceAlarm();
+  if(!alarm || !alarm.snoozeEnabled) return;
+  const minutes = Math.max(1, parseInt(alarm.snoozeMinutes)||5);
+  routineSnoozeTimer = setTimeout(repeatRoutineSnooze, minutes * 60 * 1000);
+}
+
+function repeatRoutineSnooze(){
+  routineSnoozeTimer = null;
+  const active = getActiveRoutineTask();
+  const alarm = getActiveRoutineSourceAlarm();
+  if(!active || !alarm || !alarm.snoozeEnabled) return;
+  activeRoutineAlarm.silenced = false;
+  playAlarmSound('urgent');
+  const msg = routineAlarmSpeech(active.prof, active.step);
+  speak(msg, 0.88, 500);
+  if(speakIval){ clearInterval(speakIval); speakIval=null; }
+  speakIval = setInterval(()=>speak(msg, 0.88), 20000);
+  scheduleRoutineSnooze();
+  renderChildMode();
+}
+
 function triggerRoutineStep(prof, step, profIdx, rId){
   if(activeAlarmId !== null) return;
   activeAlarmId = 'routine_'+step.id;
-  activeRoutineAlarm = { profIdx, rId, stepId: step.id, sourceAlarmId: step.sourceAlarmId || null, canFinish:false };
+  activeRoutineAlarm = { profIdx, rId, stepId: step.id, sourceAlarmId: step.sourceAlarmId || null, canFinish:false, silenced:false };
   const t = `${pad(step.hour)}:${pad(step.min)}`;
   const inChildMode = document.body.classList.contains('child-mode');
   if(taskDoneUnlockTimer){ clearTimeout(taskDoneUnlockTimer); taskDoneUnlockTimer=null; }
@@ -2320,8 +2386,8 @@ function triggerRoutineStep(prof, step, profIdx, rId){
   document.getElementById('balloonGame').classList.remove('show');
   document.getElementById('btnStop').textContent = 'JÁ FIZ';
   document.getElementById('btnStop').style.display = inChildMode ? 'none' : 'flex';
-  const min = minutesUntilNextTask(profIdx, step.id);
-  const msg = `Alarme! ${todayLongText()} ${dayGreetingText()} Agora e hora de ${step.name}. ${step.tip || ''} Va fazer a tarefa. O botao Ja fiz aparece em ${TASK_DONE_DELAY_MINUTES} minutos.`;
+  clearRoutineSnooze();
+  const msg = routineAlarmSpeech(prof, step);
   speak(msg, 0.88, 800);
   speakIval = setInterval(()=>speak(msg, 0.88), 20000);
   if('Notification' in window && Notification.permission==='granted'){
@@ -2398,6 +2464,7 @@ function stopAlarm(){
   stopBeeps(); speechSynthesis.cancel();
   if(speakIval){clearInterval(speakIval);speakIval=null;}
   if(taskDoneUnlockTimer){clearTimeout(taskDoneUnlockTimer);taskDoneUnlockTimer=null;}
+  clearRoutineSnooze();
   document.getElementById('overlay').classList.remove('on');
   document.getElementById('balloonGame').classList.remove('show');
   document.body.style.overflow='';
@@ -2434,7 +2501,9 @@ function addAlarm(){
   const M=parseInt(document.getElementById('nMin').value);
   const label=document.getElementById('nLabel').value.trim();
   const isBirthday=document.getElementById('isBirthday').checked;
-  let alarm={id:Date.now(),hour:H,min:M,label,emoji:selectedAlarmEmoji,active:true,mode:selectedMode,sound:selSound,isBirthday,profileId:selectedAlarmProfile};
+  const snoozeEnabled=document.getElementById('nSnooze')?.checked || false;
+  const snoozeMinutes=parseInt(document.getElementById('nSnoozeMin')?.value)||5;
+  let alarm={id:Date.now(),hour:H,min:M,label,emoji:selectedAlarmEmoji,active:true,mode:selectedMode,sound:selSound,isBirthday,profileId:selectedAlarmProfile,snoozeEnabled,snoozeMinutes};
   if(selectedMode==='weekdays'){
     if(selectedWDs.size===0){speak('Selecione pelo menos um dia!');return;}
     alarm.mode='weekdays_custom'; alarm.days=[...selectedWDs];
@@ -2482,7 +2551,7 @@ function renderAlarms(){
         <div class="a-time">${pad(a.hour)}:${pad(a.min)}</div>
         <div class="a-label">${emoji} ${a.label||'Alarme'} · ${p.avatar} ${p.name}</div>
         <div class="a-repeat">${repeatLabel(a)}</div>
-        <div class="a-sound">${snd.label} · vai para ${ROUTINE_META[a.routineId||routineIdForHour(a.hour)]?.title||'rotina'}</div>
+        <div class="a-sound">${snd.label} · vai para ${ROUTINE_META[a.routineId||routineIdForHour(a.hour)]?.title||'rotina'}${a.snoozeEnabled ? ` · soneca ${a.snoozeMinutes||5} min` : ''}</div>
       </div>
       <div class="a-right">
         <button class="ico-btn" style="color:var(--accent)" onclick="openEditModal(${a.id})" title="Editar">✏️</button>
@@ -2809,6 +2878,8 @@ function openEditModal(id){
   document.getElementById('eMin').value   = pad(a.min);
   document.getElementById('eLabel').value = a.label || '';
   document.getElementById('eIsBirthday').checked = !!a.isBirthday;
+  document.getElementById('eSnooze').checked = !!a.snoozeEnabled;
+  document.getElementById('eSnoozeMin').value = String(a.snoozeMinutes || 5);
 
   // mode buttons
   document.querySelectorAll('#editModal .rmode').forEach(b =>
@@ -2869,6 +2940,8 @@ function saveEditAlarm(){
   a.sound = selEditSound;
   a.profileId   = selEditProfile;
   a.isBirthday  = document.getElementById('eIsBirthday').checked;
+  a.snoozeEnabled = document.getElementById('eSnooze')?.checked || false;
+  a.snoozeMinutes = parseInt(document.getElementById('eSnoozeMin')?.value)||5;
   a.mode = selEditMode;
 
   if(selEditMode === 'weekdays'){
